@@ -49,9 +49,9 @@ public class BlackNode<K, V> extends Node<K, V> {
             return new RedNode<K,V>(right.getKey(), right.getValue(), leftChild, rightChild);
 
         } else if (spin == RL) {
-            Node<K, V> leftChild = new BlackNode<K,V>(getKey(), getValue(), left, right.left());
-            Node<K, V> rightChild = new BlackNode<K,V>(right.right().getKey(), right.right().getValue(), right.right().left(), right.right().right());
-            return new RedNode<K,V>(right.getKey(), right.getValue(), leftChild, rightChild);
+            Node<K, V> leftChild = new BlackNode<K,V>(getKey(), getValue(), left, right.left().left());
+            Node<K, V> rightChild = new BlackNode<K,V>(right.getKey(), right.getValue(), right.left().right(), right.right());
+            return new RedNode<K,V>(right.left().getKey(), right.left().getValue(), leftChild, rightChild);
 
         }
 

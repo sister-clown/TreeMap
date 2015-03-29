@@ -48,7 +48,8 @@ public abstract class Node<K, V> {
     public Optional<V> getLoop(Comparable<? super K> key) {
 
         Node<K, V> cur = this;
-        do {
+
+        while (cur.exitNode()) {
             int result = key.compareTo(cur.getKey());
 
             if (result > 0)
@@ -59,8 +60,7 @@ public abstract class Node<K, V> {
 
             else if (result == 0)
                 return Optional.ofNullable(cur.getValue());
-
-        } while (cur.exitNode());
+        }
 
         return Optional.ofNullable(null);
     }

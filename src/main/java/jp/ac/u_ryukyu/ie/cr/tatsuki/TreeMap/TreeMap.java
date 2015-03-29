@@ -14,7 +14,7 @@ public class TreeMap<K, V> {
     int size;
 
     public TreeMap() {
-        this.root = null;
+        this.root = new EmptyNode<>();
         this.size = 0;
     }
 
