@@ -30,7 +30,10 @@ public class TreeMap<K, V> {
 
     public Optional<V> get(K key) {
         return root.get((Comparable<? super K>) key);
+    }
 
+    public Optional<V> getLoop(K key) {
+        return root.getLoop((Comparable<? super K>) key);
     }
 
     public TreeMap put(K key, V value) {

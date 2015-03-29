@@ -28,9 +28,11 @@ public abstract class Node<K, V> {
         return left;
     }
 
+
     public Optional<V> get(Comparable<? super K> key) {
 
         int result = key.compareTo(getKey());
+
         if (result > 0)
             return right().get(key);
 
@@ -38,10 +40,31 @@ public abstract class Node<K, V> {
             return left().get(key);
 
         else if (result == 0)
-            return Optional.ofNullable((V) getValue());
+            return Optional.ofNullable(getValue());
 
         return Optional.ofNullable(null);
     }
+
+    public Optional<V> getLoop(Comparable<? super K> key) {
+
+        Node<K, V> cur = this;
+        do {
+            int result = key.compareTo(cur.getKey());
+
+            if (result > 0)
+                cur = cur.right();
+
+            else if (result < 0)
+                cur = cur.left();
+
+            else if (result == 0)
+                return Optional.ofNullable(cur.getValue());
+
+        } while (cur.exitNode());
+
+        return Optional.ofNullable(null);
+    }
+
 
     public Node<K, V> right() {
         return right;
@@ -74,6 +97,9 @@ public abstract class Node<K, V> {
     }
 
     public abstract Node clone();
+
+
+    protected abstract boolean exitNode();
 
     public abstract Node<K, V> createNode(K key, V value, Node<K, V> left, Node<K, V> right);
 

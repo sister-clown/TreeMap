@@ -19,6 +19,11 @@ public class RedNode<K, V> extends Node<K, V> {
     }
 
     @Override
+    protected boolean exitNode() {
+        return true;
+    }
+
+    @Override
     public Node<K,V> createNode(K key, V value, Node<K, V> left, Node<K, V> right) {
         return new RedNode<K,V>(key, value, left, right);
     }

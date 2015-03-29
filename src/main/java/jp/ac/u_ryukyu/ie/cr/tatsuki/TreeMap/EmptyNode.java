@@ -14,6 +14,11 @@ public class EmptyNode<K, V> extends Node<K, V> {
     }
 
     @Override
+    protected boolean exitNode() {
+        return false;
+    }
+
+    @Override
     public Node<K, V> clone() {
         return new EmptyNode<K, V>();
     }
