@@ -22,7 +22,7 @@ public class TreeMapTest {
 
         for (int count = 100; count > -10; count--) {
 
-            Optional<Integer> op = map.getLoop(count);
+            Optional<Integer> op = map.get(count);
             if (op.isPresent())
                 System.out.println(op.get());
         }

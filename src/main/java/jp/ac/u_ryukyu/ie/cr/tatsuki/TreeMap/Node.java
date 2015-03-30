@@ -31,22 +31,6 @@ public abstract class Node<K, V> {
 
     public Optional<V> get(Comparable<? super K> key) {
 
-        int result = key.compareTo(getKey());
-
-        if (result > 0)
-            return right().get(key);
-
-        else if (result < 0)
-            return left().get(key);
-
-        else if (result == 0)
-            return Optional.ofNullable(getValue());
-
-        return Optional.ofNullable(null);
-    }
-
-    public Optional<V> getLoop(Comparable<? super K> key) {
-
         Node<K, V> cur = this;
 
         while (cur.exitNode()) {
