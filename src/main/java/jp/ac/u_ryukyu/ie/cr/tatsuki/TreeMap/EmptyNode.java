@@ -18,28 +18,62 @@ public class EmptyNode<K, V> extends Node<K, V> {
         return false;
     }
 
-    @Override
-    public Node<K, V> clone() {
-        return new EmptyNode<K, V>();
-    }
 
     @Override
     public Node<K, V> createNode(K key, V value, Node<K, V> left, Node<K, V> right) {
         return new RedNode<K, V>(key, value, new EmptyNode<K, V>(), new EmptyNode<K, V>());
     }
 
-    @Override
-    public Node<K, V> put(Comparable<? super K> k, V value) {
+
+    public Node<K, V> put(K k, V value) {
         return new RedNode(k, value, new EmptyNode<K, V>(), new EmptyNode<K, V>());
     }
 
     @Override
-    Node balance() {
-        return clone();
+    public Node replaceNode(Node<K, V> parent) { // not use method
+        return this;
     }
 
     @Override
-    public Optional<V> get(Comparable<? super K> key) {
+    protected Node deleteNode() { //not use method
+        return this;
+    }
+
+    @Override
+    Node insBalance() {
+        return this;
+    }
+
+    @Override
+    public Node deleteBalance(Node<K, V> parent) {
+        if (rebuildFlag) {
+            Rotate editNodeSide;
+            if (0 > (parent.getKey().hashCode() - this.getKey().hashCode()))
+                editNodeSide = Rotate.R;
+            else
+                editNodeSide = Rotate.L;
+
+            DeleteRebuildFlag flag = parent.RebuildDelete(editNodeSide);
+
+
+            switch (flag) {
+                case two:
+                    return rebuildTwo(parent, editNodeSide);
+                case three:
+                    return rebuildThree(parent, editNodeSide);
+                case four:
+                    return rebuildFour(parent, editNodeSide);
+                case five:
+                    return rebuildfive(parent, editNodeSide);
+                case six:
+                    return rebuildsix(parent, editNodeSide);
+            }
+        }
+        return this;
+    }
+
+    @Override
+    public Optional<V> get(K key) {
         return Optional.ofNullable((V) getValue());
     }
 
@@ -52,4 +86,20 @@ public class EmptyNode<K, V> extends Node<K, V> {
     boolean secondCheckColor() {
         return false;
     }
+
+    @Override
+    DeleteRebuildFlag RebuildDelete(Rotate side) { //not use method
+        return null;
+    }
+
+    @Override
+    DeleteRebuildFlag firstChildRebuildDelete(Rotate side) {
+        return DeleteRebuildFlag.allBlack;
+    }
+
+    @Override
+    boolean secondChildRebuildDelete() {
+        return true;
+    }
+
 }

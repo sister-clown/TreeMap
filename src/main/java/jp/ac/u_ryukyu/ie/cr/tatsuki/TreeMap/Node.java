@@ -11,6 +11,7 @@ public abstract class Node<K, V> {
     protected V value;
     protected Node<K, V> right;
     protected Node<K, V> left;
+    protected boolean rebuildFlag = false;
 
     public Node(K key, V value) {
         this.key = key;
@@ -29,12 +30,12 @@ public abstract class Node<K, V> {
     }
 
 
-    public Optional<V> get(Comparable<? super K> key) {
+    public Optional<V> get(K key) {
 
         Node<K, V> cur = this;
 
         while (cur.exitNode()) {
-            int result = key.compareTo(cur.getKey());
+            int result = key.hashCode() - cur.getKey().hashCode();
 
             if (result > 0)
                 cur = cur.right();
@@ -63,33 +64,162 @@ public abstract class Node<K, V> {
     }
 
 
-    public Node<K, V> put(Comparable<? super K> k, V value) {
+    public Node<K, V> put(K k, V value) {
 
-        int result = k.compareTo(this.key);
+        int result = k.hashCode() - this.key.hashCode();
 
         if (result > 0) {
             Node<K, V> node = right.put(k, value);
             node = createNode(key, this.value, left, node);
-            return node.balance();
+            return node.insBalance();
         } else if (result < 0) {
             Node node = left.put(k, value);
-            return createNode(key, this.value, node, right).balance();
+            return createNode(key, this.value, node, right).insBalance();
         }
 
         return createNode(key, value, left, right); // equals
 
     }
 
-    public abstract Node clone();
+    public Node<K, V> delete(K key, Node<K, V> parent) {
+        int result = key.hashCode() - this.key.hashCode();
+
+        if (result > 0) {
+            Node<K, V> node = right.delete(key, this);
+            node = createNode(getKey(), getValue(), left, node);
+            return node.deleteBalance(parent);
+
+        } else if (result < 0) {
+            Node node = left.delete(key, this);
+            return createNode(getKey(), getValue(), node, right).deleteBalance(parent);
+
+        } else if (result == 0) {
+            return replaceNode(parent).deleteBalance(parent); // equals
+        }
+
+        return this; //not found key
+    }
+
+
+
+    public Node<K, V> deleteSubTreeMaxNode(Node<K, V> parent) {
+
+        if (!right().right().exitNode()) {
+
+            return right().replaceNode(this);
+
+        }
+
+        return right().deleteSubTreeMaxNode(this).deleteBalance(parent);
+    }
+
+    public void setRebuildFlag(boolean flag) {
+        this.rebuildFlag = flag;
+
+    }
+
+
+    protected Node<K,V> rebuildTwo(Node<K, V> parent, Rotate side) { // case2
+        if (side == Rotate.L) { // rotate Left
+            Node<K, V> leftSubTreeRoot = parent.right().createNode(parent.getKey(), parent.getValue(), this, parent.right().left());
+            Node<K, V> leftNode = this.deleteBalance(leftSubTreeRoot);
+            Node<K, V> rightNode = parent.right().right();
+            return parent.createNode(parent.right().getKey(), parent.right().getValue(), leftNode, rightNode);
+
+        } else {  // rotate Right
+            Node<K, V> rightSubTreeRoot = parent.left().createNode(parent.getKey(), parent.getValue(), parent.left().right(), this);
+            Node<K, V> leftNode = this.deleteBalance(rightSubTreeRoot);
+            Node<K, V> rightNode = parent.left().left();
+            return parent.createNode(parent.left().getKey(), parent.left().getValue(), leftNode, rightNode);
+
+        }
+
+    }
+
+    protected Node rebuildThree(Node<K, V> parent, Rotate side) { // case3 再起
+        if (side == Rotate.L) {
+            Node<K, V> rightNode = new BlackNode<K, V>(parent.right().getKey(), parent.right().getValue(), parent.right().left(), parent.right().right());
+            Node<K, V> newParent = parent.createNode(parent.getKey(), parent.getValue(), this, rightNode);
+            newParent.setRebuildFlag(true);
+            return newParent;
+        } else {  // rotate Right
+            Node<K, V> rightNode = new BlackNode<K, V>(parent.left().getKey(), parent.left().getValue(), parent.left().left(), parent.left().right());
+            Node<K, V> newParent = parent.createNode(parent.getKey(), parent.getValue(), this, rightNode);
+            newParent.setRebuildFlag(true);
+            return newParent;
+
+        }
+
+    }
+
+    protected Node rebuildFour(Node<K, V> parent, Rotate side) { //case 4
+        if (side == Rotate.L) {
+            Node<K, V> rightNode = new RedNode<K, V>(parent.right().getKey(), parent.right().getValue(), parent.right().left(), parent.right().right());
+            return new BlackNode<K, V>(parent.getKey(), parent.getValue(), this, rightNode);
+
+        } else {
+            Node<K, V> leftNode = new RedNode<K, V>(parent.left().getKey(), parent.left().getValue(), parent.left().left(), parent.left().right());
+            return new BlackNode<K, V>(parent.getKey(), parent.getValue(), leftNode, this);
+        }
+
+    }
+
+    protected Node rebuildfive(Node<K, V> parent, Rotate side) { //case5
+
+        if (side == Rotate.R) { // rotate Left
+
+            Node<K, V> leftChild = new RedNode<K, V>(parent.left().getKey(), parent.left().getValue(), parent.left().left(), parent.left().right().left());
+            Node<K, V> rightChild = parent.left().right().right();
+            Node<K, V> leftSubTreeRoot = new BlackNode<K, V>(parent.left().right().getKey(), parent.left().right().getValue(), leftChild, rightChild);
+            Node<K, V> newParent = parent.createNode(parent.getKey(), parent.getValue(), leftSubTreeRoot, this);
+            return this.rebuildsix(newParent, Rotate.R);
+
+        } else {  // rotate Right
+            Node<K, V> leftChild = parent.right().left().left();
+            Node<K, V> rightChild = new RedNode<K, V>(parent.right().getKey(), parent.right().getValue(), parent.right().left().right(), parent.right().right());
+            Node<K, V> rightSubTreeRoot = new BlackNode<K, V>(parent.right().left().getKey(), parent.right().left().getValue(), leftChild, rightChild);
+            Node<K, V> newParent = parent.createNode(parent.getKey(), parent.getValue(), this, rightSubTreeRoot);
+            return this.rebuildsix(newParent, Rotate.L);
+
+        }
+    }
+
+    protected Node rebuildsix(Node<K, V> parent, Rotate side) { //case6
+        if (side == Rotate.L) { // rotate Left
+            Node<K, V> leftChild = parent.right().createNode(parent.getKey(), parent.getValue(), this, parent.right().left());
+            Node<K, V> rightChild = new BlackNode<K, V>(parent.right().right().getKey(), parent.right().right().getValue(), parent.right().right().left(), parent.right().right().right());
+            return parent.createNode(parent.right().getKey(), parent.right().getValue(), leftChild, rightChild);
+
+        } else {  // rotate Right
+            Node<K, V> leftChild = new BlackNode<K, V>(parent.left().left().getKey(), parent.left().left().getValue(), parent.left().left().left(), parent.left().left().right());
+            Node<K, V> rightChild = parent.left().createNode(parent.getKey(), parent.getValue(), this, parent.right().left());
+            return parent.createNode(parent.right().getKey(), parent.right().getValue(), leftChild, rightChild);
+
+        }
+
+    }
 
 
     protected abstract boolean exitNode();
 
     public abstract Node<K, V> createNode(K key, V value, Node<K, V> left, Node<K, V> right);
 
-    abstract Node<K, V> balance();
+    abstract Node<K, V> insBalance();
+
+    public abstract Node deleteBalance(Node<K, V> Parent);
 
     abstract Rotate firstCheckColor(Rotate side);
 
     abstract boolean secondCheckColor();
+
+    abstract DeleteRebuildFlag RebuildDelete(Rotate side);
+
+    abstract DeleteRebuildFlag firstChildRebuildDelete(Rotate side);
+
+    abstract boolean secondChildRebuildDelete();
+
+    public abstract Node replaceNode(Node<K, V> parent) ;
+
+    protected abstract Node deleteNode();
+
 }
