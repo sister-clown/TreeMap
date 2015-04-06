@@ -112,7 +112,24 @@ public abstract class Node<K, V> {
     }
 
 
-    public abstract Node<K, V> deleteSubTreeMaxNode(Node<K, V> parent) ;
+    public Node<K, V> deleteSubTreeMaxNode(Node<K, V> parent) {
+
+        Node<K, V> node;
+        if (right().exitNode()) {//最大値のノードが取得できるまで潜る
+            node = right().deleteSubTreeMaxNode(this);
+            if (parent == null)
+                return node;
+            return node.deleteBalance(parent);
+
+        }
+
+
+        node = this.replaceNode(parent); //怪しい地点
+        if (parent == null)
+            return node;
+        return node.deleteBalance(parent);
+
+    }
 
     public void setRebuildFlag(boolean flag) {
         this.rebuildFlag = flag;
@@ -209,8 +226,6 @@ public abstract class Node<K, V> {
         }
 
     }
-
-
 
 
     protected abstract boolean exitNode();

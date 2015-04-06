@@ -66,5 +66,6 @@ public class TreeMap<K, V> {
 
     public void checkBlackCount(){
         root.checkBlackCount(0);
+        System.out.println("-----------------------------------");
     }
 }

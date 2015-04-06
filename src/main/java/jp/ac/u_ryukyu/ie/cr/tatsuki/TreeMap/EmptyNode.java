@@ -123,8 +123,4 @@ public class EmptyNode<K, V> extends Node<K, V> {
         return count;
     }
 
-    @Override
-    public Node<K, V> deleteSubTreeMaxNode(Node<K, V> parent) {
-        return this;
-    }
 }

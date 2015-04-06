@@ -13,17 +13,17 @@ import java.util.Random;
 public class TreeMapDelete {
     public static void main(String args[]) {
         TreeMap<Integer, Integer> map = new TreeMap();
-        for (int count = 1; count < 15; count++) {
+        for (int count = 1; count < 200; count++) {
             map = map.put(count, count);
         }
 
         ArrayList<Integer> list = new ArrayList();
-        for (int i = 1; i < 15; i++) {
+        for (int i = 1; i < 200; i++) {
             list.add(i);
         }
 
 
-        test(map);
+       // test(map);
 
         Collections.shuffle(list);
         for (Integer num : list) {
@@ -31,7 +31,6 @@ public class TreeMapDelete {
             TreeMap newMap = map.delete(num);
             map = newMap;
             map.checkBlackCount();
-            System.out.println("-----------------------------------");
         }
         for (Integer num : list) {
             System.out.println(num);
@@ -41,33 +40,43 @@ public class TreeMapDelete {
     }
 
     public static void test(TreeMap map) {
-        TreeMap neMap = map.delete(9);
+        TreeMap neMap = map.delete(11);
         neMap.checkBlackCount();
-        neMap = neMap.delete(4);
+        neMap = neMap.delete(2);
+        neMap.checkBlackCount();
+        neMap = neMap.delete(8);
+        neMap.checkBlackCount();
+        neMap = neMap.delete(6);
         neMap.checkBlackCount();
         neMap = neMap.delete(5);
-        neMap.checkBlackCount();
-        neMap = neMap.delete(14);
-        neMap.checkBlackCount();
-        neMap = neMap.delete(11);
         neMap.checkBlackCount();
         neMap = neMap.delete(3);
         neMap.checkBlackCount();
         neMap = neMap.delete(12);
         neMap.checkBlackCount();
-        neMap = neMap.delete(8);
-        neMap.checkBlackCount();
-        neMap = neMap.delete(2);
-        neMap.checkBlackCount();
-        neMap = neMap.delete(10);
-        neMap.checkBlackCount();
-        neMap = neMap.delete(1);
+        neMap = neMap.delete(16);
         neMap.checkBlackCount();
         neMap = neMap.delete(13);
         neMap.checkBlackCount();
-        neMap = neMap.delete(6);
+        neMap = neMap.delete(17);
+        neMap.checkBlackCount();
+        neMap = neMap.delete(19);
+        neMap.checkBlackCount();
+        neMap = neMap.delete(4);
         neMap.checkBlackCount();
         neMap = neMap.delete(7);
+        neMap.checkBlackCount();
+        neMap = neMap.delete(1);
+        neMap.checkBlackCount();
+        neMap = neMap.delete(10);
+        neMap.checkBlackCount();
+        neMap = neMap.delete(14);
+        neMap.checkBlackCount();
+        neMap = neMap.delete(9);
+        neMap.checkBlackCount();
+        neMap = neMap.delete(15);
+        neMap.checkBlackCount();
+        neMap = neMap.delete(18);
         neMap.checkBlackCount();
 
 

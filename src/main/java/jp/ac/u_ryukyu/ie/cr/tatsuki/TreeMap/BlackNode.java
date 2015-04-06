@@ -183,18 +183,17 @@ public class BlackNode<K, V> extends Node<K, V> {
                 cur = cur.right();
             }
 
-            Node<K, V> leftSubTreeNode = new EmptyNode<>();
 
             if (this.left().right().exitNode()) { //左の部分木が右の子を持っているか
-                leftSubTreeNode = this.left().deleteSubTreeMaxNode(this);//最大値を削除した左の部分木を返す。rootはthisと同じ。
+                Node<K, V> leftSubTreeNode = this.left().deleteSubTreeMaxNode(null);//最大値を削除した左の部分木を返す。rootはthisと同じ。
                 Node<K, V> newParent = createNode(cur.getKey(), cur.getValue(), leftSubTreeNode, this.right()); //rootをcurと入れ替えることでNodeの削除は完了する
                 newNode = leftSubTreeNode.deleteBalance(newParent);
 
                 return newNode;
 
             } else {
-                leftSubTreeNode = this.left().replaceNode(this);//右の子がいなかった場合、左の子を昇格させるだけで良い。
-                Node newParent = this.createNode(this.left().getKey(), this.left().getValue(), leftSubTreeNode, this.right());
+                Node<K, V> leftSubTreeNode = this.left().replaceNode(this);//右の子がいなかった場合、左の子を昇格させるだけで良い。
+                Node newParent = createNode(this.left().getKey(), this.left().getValue(), leftSubTreeNode, this.right());
                 return leftSubTreeNode.deleteBalance(newParent);
 
             }
@@ -202,17 +201,4 @@ public class BlackNode<K, V> extends Node<K, V> {
 
     }
 
-    public Node<K, V> deleteSubTreeMaxNode(Node<K, V> parent) {
-
-        if (!right().right().exitNode()) {
-            Node<K, V> node = right().replaceNode(this).deleteBalance(this); //怪しい地点
-            return node;
-
-        }
-
-        Node<K, V> node = right().deleteSubTreeMaxNode(this);
-        if (parent == null)
-            return node;
-        return node.deleteBalance(parent);
-    }
 }

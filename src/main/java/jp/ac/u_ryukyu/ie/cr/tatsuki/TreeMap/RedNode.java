@@ -32,9 +32,9 @@ public class RedNode<K, V> extends Node<K, V> {
     public Node deleteBalance(Node<K, V> parent) {
 
         if (0 > (parent.getKey().hashCode() - this.getKey().hashCode()))
-            return createNode(parent.getKey(), parent.getValue(), parent.left(), this);
+            return parent.createNode(parent.getKey(), parent.getValue(), parent.left(), this);
         else
-            return createNode(parent.getKey(), parent.getValue(), this, parent.right());
+            return parent.createNode(parent.getKey(), parent.getValue(), this, parent.right());
     }
 
     @Override
@@ -118,33 +118,17 @@ public class RedNode<K, V> extends Node<K, V> {
             Node<K, V> leftSubTreeNode = new EmptyNode<>();
 
             if (this.left().right().exitNode()) {
-                leftSubTreeNode = this.left().deleteSubTreeMaxNode(this);
-                newNode = cur.createNode(cur.getKey(), cur.getValue(), leftSubTreeNode.left(), leftSubTreeNode.right());
+                leftSubTreeNode = this.left().deleteSubTreeMaxNode(null);
+                newNode = createNode(cur.getKey(), cur.getValue(), leftSubTreeNode, this.right());
                 return leftSubTreeNode.deleteBalance(newNode);
 
             } else {
                 leftSubTreeNode = this.left().replaceNode(this);
-                newNode = createNode(cur.getKey(), cur.getValue(), leftSubTreeNode.left(), this.right());
+                newNode = createNode(cur.getKey(), cur.getValue(), leftSubTreeNode, this.right());
                 return leftSubTreeNode.deleteBalance(newNode);
             }
 
         }
-    }
-
-    public Node<K, V> deleteSubTreeMaxNode(Node<K, V> parent) {
-
-        if (!right().right().exitNode()) {
-            Node<K, V> node = right().replaceNode(this); //怪しい地点
-            if (parent == null)
-                return node;
-            return node;
-
-        }
-
-        Node<K, V> node = right().deleteSubTreeMaxNode(this);
-        if (parent == null)
-            return node;
-        return node.deleteBalance(parent);
     }
 
 
