@@ -58,8 +58,13 @@ public class TreeMap<K, V> {
         if (node == null)
             return this; // not key
 
+        if (!node.exitNode())
+            return new TreeMap(new EmptyNode<>(),0);
         Node newRoot = new BlackNode(node.getKey(),node.getValue(),node.left(),node.right());
         return new TreeMap(newRoot,0);
     }
 
+    public void checkBlackCount(){
+        root.checkBlackCount(0);
+    }
 }

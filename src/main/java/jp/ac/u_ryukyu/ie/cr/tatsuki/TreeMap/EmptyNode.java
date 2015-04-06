@@ -17,6 +17,17 @@ public class EmptyNode<K, V> extends Node<K, V> {
         super(key, null);
     }
 
+    @Override // 回転処理時にEmptyNodeの子を見ることがあるのでleft rightでEmptyNodeを返すようにする
+    public Node<K, V> left() {
+        return new EmptyNode<>();
+    }
+
+    @Override
+    public Node<K, V> right() {
+        return new EmptyNode<>();
+    }
+
+
     @Override
     protected boolean exitNode() {
         return false;
@@ -106,4 +117,14 @@ public class EmptyNode<K, V> extends Node<K, V> {
         return DeleteRebuildFlag.allBlack;
     }
 
+    @Override
+    protected int checkBlackCount(int count) { // test method
+        System.out.println("blackCount = " + count);
+        return count;
+    }
+
+    @Override
+    public Node<K, V> deleteSubTreeMaxNode(Node<K, V> parent) {
+        return this;
+    }
 }

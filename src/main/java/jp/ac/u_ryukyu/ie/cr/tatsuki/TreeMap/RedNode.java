@@ -32,7 +32,7 @@ public class RedNode<K, V> extends Node<K, V> {
     public Node deleteBalance(Node<K, V> parent) {
 
         if (0 > (parent.getKey().hashCode() - this.getKey().hashCode()))
-            return createNode(parent.getKey(), parent.getValue(), parent.right(), this);
+            return createNode(parent.getKey(), parent.getValue(), parent.left(), this);
         else
             return createNode(parent.getKey(), parent.getValue(), this, parent.right());
     }
@@ -100,11 +100,11 @@ public class RedNode<K, V> extends Node<K, V> {
             return deleteNode();
 
         } else if (this.left().exitNode() && !this.right().exitNode()) { //左の部分木を昇格させる
-            newNode = createNode(left().getKey(), left().getValue(), left().left(), left().right());
+            newNode = left().createNode(left().getKey(), left().getValue(), left().left(), left().right());
             return newNode;
 
         } else if (!this.left().exitNode() && this.right().exitNode()) { //右の部分木を昇格させる
-            newNode = createNode(right().getKey(), right().getValue(), right().left(), right().right());
+            newNode = right().createNode(right().getKey(), right().getValue(), right().left(), right().right());
             return newNode;
 
         } else {//子ノードが左右にある場合
@@ -119,14 +119,39 @@ public class RedNode<K, V> extends Node<K, V> {
 
             if (this.left().right().exitNode()) {
                 leftSubTreeNode = this.left().deleteSubTreeMaxNode(this);
+                newNode = cur.createNode(cur.getKey(), cur.getValue(), leftSubTreeNode.left(), leftSubTreeNode.right());
+                return leftSubTreeNode.deleteBalance(newNode);
+
             } else {
                 leftSubTreeNode = this.left().replaceNode(this);
+                newNode = createNode(cur.getKey(), cur.getValue(), leftSubTreeNode.left(), this.right());
+                return leftSubTreeNode.deleteBalance(newNode);
             }
 
+        }
+    }
 
-            newNode = createNode(cur.getKey(), cur.getValue(), leftSubTreeNode, right());
-            return newNode;
+    public Node<K, V> deleteSubTreeMaxNode(Node<K, V> parent) {
+
+        if (!right().right().exitNode()) {
+            Node<K, V> node = right().replaceNode(this); //怪しい地点
+            if (parent == null)
+                return node;
+            return node;
+
         }
 
+        Node<K, V> node = right().deleteSubTreeMaxNode(this);
+        if (parent == null)
+            return node;
+        return node.deleteBalance(parent);
+    }
+
+
+    @Override
+    protected int checkBlackCount(int count) { // test method
+        left().checkBlackCount(count);
+        right().checkBlackCount(count);
+        return count;
     }
 }
