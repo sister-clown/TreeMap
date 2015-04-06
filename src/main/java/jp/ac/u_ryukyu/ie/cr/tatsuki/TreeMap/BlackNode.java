@@ -13,7 +13,8 @@ public class BlackNode<K, V> extends Node<K, V> {
 
     @Override
     public Node deleteNode() {
-        EmptyNode<K, V> emptyNode = new EmptyNode<K, V>();
+        EmptyNode<K, V> emptyNode = new EmptyNode<K, V>(key);
+        emptyNode.setRebuildFlag(true);
         return emptyNode;
     }
 
@@ -42,11 +43,12 @@ public class BlackNode<K, V> extends Node<K, V> {
                     return rebuildsix(parent, editNodeSide);
             }
         }
-        return this;
+        if (0 > (parent.getKey().hashCode() - this.getKey().hashCode()))
+            return parent.createNode(parent.getKey(), parent.getValue(), parent.right(), this);
+        else
+            return parent.createNode(parent.getKey(), parent.getValue(), this, parent.right());
+
     }
-
-
-
 
 
     @Override
@@ -62,7 +64,7 @@ public class BlackNode<K, V> extends Node<K, V> {
 
     @Override
     Node insBalance() {
-        Rotate spin = left.firstCheckColor(L);
+        Rotate spin = left.checkRotate(L);
 
         if (spin == R) {
             Node<K, V> leftChild = new BlackNode<K, V>(left.left().getKey(), left.left().getValue(), left.left().left(), left.left().right());
@@ -76,7 +78,7 @@ public class BlackNode<K, V> extends Node<K, V> {
 
         }
 
-        spin = right.firstCheckColor(R);
+        spin = right.checkRotate(R);
         if (spin == L) {
             Node<K, V> leftChild = new BlackNode<K, V>(getKey(), getValue(), left, right.left());
             Node<K, V> rightChild = new BlackNode<K, V>(right.right().getKey(), (V) right.right().getValue(), right.right().left(), right.right().right());
@@ -94,12 +96,12 @@ public class BlackNode<K, V> extends Node<K, V> {
 
 
     @Override
-    Rotate firstCheckColor(Rotate side) {
+    Rotate checkRotate(Rotate side) {
         return N;
     }
 
     @Override
-    boolean secondCheckColor() {
+    boolean checkColor() {
         return false;
     }
 
@@ -107,10 +109,10 @@ public class BlackNode<K, V> extends Node<K, V> {
     DeleteRebuildFlag RebuildDelete(Rotate side) {
 
         DeleteRebuildFlag flag;
-        if (side == Rotate.R) {
-            flag = this.left().firstChildRebuildDelete(side);
+        if (side == Rotate.R) {//どっち側のNodeを編集したか 右側を編集して来たならRが来る
+            flag = this.left().childRebuildDelete(side);
         } else {
-            flag = this.right().firstChildRebuildDelete(side);
+            flag = this.right().childRebuildDelete(side);
         }
 
         if (flag == DeleteRebuildFlag.allBlack)
@@ -120,34 +122,29 @@ public class BlackNode<K, V> extends Node<K, V> {
     }
 
     @Override
-    DeleteRebuildFlag firstChildRebuildDelete(Rotate side) {
+    DeleteRebuildFlag childRebuildDelete(Rotate side) {
 
-        boolean rightChild = this.right().secondChildRebuildDelete();
-        boolean leftChild = this.left().secondChildRebuildDelete();
+        boolean rightChild = this.right().checkColor();
+        boolean leftChild = this.left().checkColor();
 
-        if (rightChild && leftChild)
+        if (!rightChild && !leftChild)
             return DeleteRebuildFlag.allBlack;
 
-        if (side == Rotate.R) {
+        if (side == Rotate.R) {//どっち側のNodeを編集したか 右側を編集して来たならRが来る
             if (rightChild)
-                return DeleteRebuildFlag.six;
-            else
                 return DeleteRebuildFlag.five;
+            else
+                return DeleteRebuildFlag.six;
         }
 
         if (side == Rotate.L) {
             if (leftChild)
-                return DeleteRebuildFlag.six;
-            else
                 return DeleteRebuildFlag.five;
+            else
+                return DeleteRebuildFlag.six;
         }
 
         return null;
-    }
-
-    @Override
-    boolean secondChildRebuildDelete() {
-        return true;
     }
 
     @Override
@@ -155,21 +152,19 @@ public class BlackNode<K, V> extends Node<K, V> {
 
         Node<K, V> newNode = null;
         if (!this.left().exitNode() && !this.right().exitNode()) { //自身を削除する
-            return deleteNode().deleteBalance(parent);//黒が1つ減るので木のバランスを取る
+            return deleteNode();//黒が1つ減るので木のバランスを取る
 
         } else if (this.left().exitNode() && !this.right().exitNode()) { //左の部分木を昇格させる
             newNode = createNode(left().getKey(), left().getValue(), left().left(), left().right());
-            if (this.left().secondChildRebuildDelete())
-                return newNode.deleteBalance(parent);
-            else
-                return newNode;
+            if (!this.left().checkColor()) //昇格させる木のrootが黒だったらバランスを取る
+                newNode.setRebuildFlag(true);
+            return newNode;
 
         } else if (!this.left().exitNode() && this.right().exitNode()) { //右の部分木を昇格させる
             newNode = createNode(right().getKey(), right().getValue(), right().left(), right().right());
-            if (this.right().secondChildRebuildDelete())
-                return newNode.deleteBalance(parent);
-            else
-                return newNode;
+            if (!this.right().checkColor()) //昇格させる木のrootが黒だったらバランスを取る
+                newNode.setRebuildFlag(true);
+            return newNode;
 
         } else {//子ノードが左右にある場合
             //左の部分木の最大の値を持つNodeと自身を置き換える
@@ -185,14 +180,16 @@ public class BlackNode<K, V> extends Node<K, V> {
                 leftSubTreeNode = this.left().deleteSubTreeMaxNode(this);
             } else {
                 leftSubTreeNode = this.left().replaceNode(this);
+                Node newParent = this.createNode(this.left().getKey(),this.left().getValue(),leftSubTreeNode,this.right());
+                return leftSubTreeNode.deleteBalance(newParent);
+
             }
 
 
             newNode = createNode(cur.getKey(), cur.getValue(), leftSubTreeNode, right());
-            if (cur.secondChildRebuildDelete())
-                return newNode.deleteBalance(parent);
-            else
-                return newNode;
+            if (!cur.checkColor()) //置き換えるNodeが黒だったらバランスを取る
+                newNode.setRebuildFlag(true);
+            return newNode;
         }
 
     }

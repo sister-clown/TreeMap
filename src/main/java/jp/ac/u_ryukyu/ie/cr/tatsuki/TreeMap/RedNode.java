@@ -29,32 +29,36 @@ public class RedNode<K, V> extends Node<K, V> {
     }
 
     @Override
-    public Node deleteBalance(Node<K, V> parent) { // not use method
-        return this;
+    public Node deleteBalance(Node<K, V> parent) {
+
+        if (0 > (parent.getKey().hashCode() - this.getKey().hashCode()))
+            return createNode(parent.getKey(), parent.getValue(), parent.right(), this);
+        else
+            return createNode(parent.getKey(), parent.getValue(), this, parent.right());
     }
 
     @Override
     protected Node deleteNode() {
-        return new EmptyNode();
+        return new EmptyNode(this.getKey());
     }
 
     @Override
-    Rotate firstCheckColor(Rotate side) {
+    Rotate checkRotate(Rotate side) {
 
         if (side == L) {
-            if (left.secondCheckColor())
+            if (left.checkColor())
                 return R;
 
-            else if (right.secondCheckColor())
+            else if (right.checkColor())
                 return LR;
 
             return N;
         } else {
 
-            if (left.secondCheckColor())
+            if (left.checkColor())
                 return RL;
 
-            else if (right.secondCheckColor())
+            else if (right.checkColor())
                 return L;
 
             return N;
@@ -63,7 +67,7 @@ public class RedNode<K, V> extends Node<K, V> {
     }
 
     @Override
-    boolean secondCheckColor() {
+    boolean checkColor() {
         return true;
     }
 
@@ -72,9 +76,9 @@ public class RedNode<K, V> extends Node<K, V> {
 
         DeleteRebuildFlag flag;
         if (side == Rotate.R) {
-            flag = this.left().firstChildRebuildDelete(side);
+            flag = this.left().childRebuildDelete(side);
         } else {
-            flag = this.right().firstChildRebuildDelete(side);
+            flag = this.right().childRebuildDelete(side);
         }
 
         if (flag == DeleteRebuildFlag.allBlack)
@@ -84,13 +88,8 @@ public class RedNode<K, V> extends Node<K, V> {
     }
 
     @Override
-    DeleteRebuildFlag firstChildRebuildDelete(Rotate side) {
+    DeleteRebuildFlag childRebuildDelete(Rotate side) {
         return DeleteRebuildFlag.two;
-    }
-
-    @Override
-    boolean secondChildRebuildDelete() {
-        return false;
     }
 
     @Override

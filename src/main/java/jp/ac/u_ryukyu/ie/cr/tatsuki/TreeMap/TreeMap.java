@@ -54,6 +54,10 @@ public class TreeMap<K, V> {
 
     public TreeMap<K,V> delete(K key) {
        Node node = root.delete(key,null);
+
+        if (node == null)
+            return this; // not key
+
         Node newRoot = new BlackNode(node.getKey(),node.getValue(),node.left(),node.right());
         return new TreeMap(newRoot,0);
     }

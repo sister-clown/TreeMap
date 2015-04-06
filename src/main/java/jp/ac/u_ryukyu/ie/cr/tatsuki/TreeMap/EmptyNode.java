@@ -13,6 +13,10 @@ public class EmptyNode<K, V> extends Node<K, V> {
         super(null, null);
     }
 
+    public EmptyNode(K key) { //keyは削除時の回転処理に使用する
+        super(key, null);
+    }
+
     @Override
     protected boolean exitNode() {
         return false;
@@ -69,7 +73,12 @@ public class EmptyNode<K, V> extends Node<K, V> {
                     return rebuildsix(parent, editNodeSide);
             }
         }
-        return this;
+
+        if (0 > (parent.getKey().hashCode() - this.getKey().hashCode()))
+            return parent.createNode(parent.getKey(), parent.getValue(), parent.left(), this);
+        else
+            return parent.createNode(parent.getKey(), parent.getValue(), this, parent.right());
+
     }
 
     @Override
@@ -78,12 +87,12 @@ public class EmptyNode<K, V> extends Node<K, V> {
     }
 
     @Override
-    Rotate firstCheckColor(Rotate side) {
+    Rotate checkRotate(Rotate side) {
         return N;
     }
 
     @Override
-    boolean secondCheckColor() {
+    boolean checkColor() {
         return false;
     }
 
@@ -93,13 +102,8 @@ public class EmptyNode<K, V> extends Node<K, V> {
     }
 
     @Override
-    DeleteRebuildFlag firstChildRebuildDelete(Rotate side) {
+    DeleteRebuildFlag childRebuildDelete(Rotate side) {
         return DeleteRebuildFlag.allBlack;
-    }
-
-    @Override
-    boolean secondChildRebuildDelete() {
-        return true;
     }
 
 }
