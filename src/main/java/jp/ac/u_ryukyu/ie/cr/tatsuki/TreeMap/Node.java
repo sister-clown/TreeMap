@@ -11,7 +11,6 @@ public abstract class Node<K, V> {
     protected V value;
     protected Node<K, V> right;
     protected Node<K, V> left;
-    protected boolean rebuildFlag = false;
 
     public Node(K key, V value) {
         this.key = key;
@@ -29,6 +28,9 @@ public abstract class Node<K, V> {
         return left;
     }
 
+    public int compare(Node<K, V> parent) {
+        return (parent.getKey().hashCode() - key.hashCode());
+    }
 
     public Optional<V> get(K key) {
 
@@ -53,10 +55,6 @@ public abstract class Node<K, V> {
 
     public Node<K, V> right() {
         return right;
-    }
-
-    public boolean getRebuildFlag() {
-        return rebuildFlag;
     }
 
     public K getKey() {
@@ -128,11 +126,6 @@ public abstract class Node<K, V> {
         if (parent == null)
             return node;
         return node.deleteBalance(parent);
-
-    }
-
-    public void setRebuildFlag(boolean flag) {
-        this.rebuildFlag = flag;
 
     }
 

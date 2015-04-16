@@ -31,33 +31,72 @@ public class BlackNode<K, V> extends Node<K, V> {
     public Node deleteBalance(Node<K, V> parent) {
         if (rebuildFlag) {
             Rotate editNodeSide;
-            if (0 > (parent.getKey().hashCode() - key.hashCode())) //自身がどちらの子かを調べる
+            DeleteRebuildFlag flag;
+            if (0 > compare(parent)) { //自身がどちらの子かを調べる
                 editNodeSide = Rotate.R;//右の子
-            else
+                flag = parent.right().childRebuildDelete(Rotate.R);
+
+                if (parent.right().isBlack()) {
+                    boolean rightChild = this.right().checkColor();
+                    boolean leftChild = this.left().checkColor();
+
+                    if (!rightChild && !leftChild)
+                        return DeleteRebuildFlag.allBlack;
+
+                        if (rightChild)
+                            return DeleteRebuildFlag.five;
+                        else
+                            return DeleteRebuildFlag.six;
+
+                } else {
+                    //red
+                }
+
+            } else {
                 editNodeSide = Rotate.L;//左の子
+                flag = parent.right().childRebuildDelete(Rotate.L);
 
-            DeleteRebuildFlag flag = parent.RebuildDelete(editNodeSide);
+                if (parent.left().isBlack()) {
+                    boolean rightChild = this.right().checkColor();
+                    boolean leftChild = this.left().checkColor();
 
+                    if (!rightChild && !leftChild)
+                        return DeleteRebuildFlag.allBlack;
+
+                    if (leftChild)
+                        return DeleteRebuildFlag.five;
+                    else
+                        return DeleteRebuildFlag.six;
+
+                } else {
+                    //red
+                }
+            }
+
+
+            if (flag == DeleteRebuildFlag.allBlack) {
+                if (parent.isBlack())
+                    return rebuildThree(parent, editNodeSide);
+                else
+                    return rebuildFour(parent, editNodeSide);
+            }
 
             switch (flag) {
                 case two:
                     return rebuildTwo(parent, editNodeSide);
-                case three:
-                    return rebuildThree(parent, editNodeSide);
-                case four:
-                    return rebuildFour(parent, editNodeSide);
                 case five:
                     return rebuildfive(parent, editNodeSide);
                 case six:
                     return rebuildsix(parent, editNodeSide);
             }
         }
-        if (0 > (parent.getKey().hashCode() - this.getKey().hashCode()))
+        if (0 > (compare(parent)))
             return parent.createNode(parent.getKey(), parent.getValue(), parent.left(), this);
         else
             return parent.createNode(parent.getKey(), parent.getValue(), this, parent.right());
 
     }
+
 
 
     @Override
