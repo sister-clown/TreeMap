@@ -14,7 +14,7 @@ public class RedNode<K, V> extends Node<K, V> {
 
 
     @Override
-    protected boolean exitNode() {
+    protected boolean isNotEmpty() {
         return true;
     }
 
@@ -37,19 +37,19 @@ public class RedNode<K, V> extends Node<K, V> {
     Rotate checkRotate(Rotate side) {
 
         if (side == L) {
-            if (left.checkColor())
+            if (left.isRed())
                 return R;
 
-            else if (right.checkColor())
+            else if (right.isRed())
                 return LR;
 
             return N;
         } else {
 
-            if (left.checkColor())
+            if (left.isRed())
                 return RL;
 
-            else if (right.checkColor())
+            else if (right.isRed())
                 return L;
 
             return N;
@@ -58,7 +58,7 @@ public class RedNode<K, V> extends Node<K, V> {
     }
 
     @Override
-    boolean checkColor() {
+    boolean isRed() {
         return true;
     }
 
@@ -66,14 +66,14 @@ public class RedNode<K, V> extends Node<K, V> {
     public Node replaceNode(Node<K, V> parent) {
 
         Node<K, V> newNode = null;
-        if (!this.left().exitNode() && !this.right().exitNode()) { //自身を削除する
+        if (!this.left().isNotEmpty() && !this.right().isNotEmpty()) { //自身を削除する
             return deleteNode();
 
-        } else if (this.left().exitNode() && !this.right().exitNode()) { //左の部分木を昇格させる
+        } else if (this.left().isNotEmpty() && !this.right().isNotEmpty()) { //左の部分木を昇格させる
             newNode = left().createNode(left().getKey(), left().getValue(), left().left(), left().right());
             return newNode;
 
-        } else if (!this.left().exitNode() && this.right().exitNode()) { //右の部分木を昇格させる
+        } else if (!this.left().isNotEmpty() && this.right().isNotEmpty()) { //右の部分木を昇格させる
             newNode = right().createNode(right().getKey(), right().getValue(), right().left(), right().right());
             return newNode;
 
@@ -81,13 +81,13 @@ public class RedNode<K, V> extends Node<K, V> {
             //左の部分木の最大の値を持つNodeと自身を置き換える
             Node<K, V> cur = this.left();
 
-            while (cur.right().exitNode()) {
+            while (cur.right().isNotEmpty()) {
                 cur = cur.right();
             }
 
             Node<K, V> leftSubTreeNode = new EmptyNode<>();
 
-            if (this.left().right().exitNode()) {
+            if (this.left().right().isNotEmpty()) {
                 leftSubTreeNode = this.left().deleteSubTreeMaxNode(null);
                 newNode = createNode(cur.getKey(), cur.getValue(), leftSubTreeNode, this.right());
                 return leftSubTreeNode.deleteBalance(newNode);

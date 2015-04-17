@@ -29,7 +29,7 @@ public class EmptyNode<K, V> extends Node<K, V> {
 
 
     @Override
-    protected boolean exitNode() {
+    protected boolean isNotEmpty() {
         return false;
     }
 
@@ -71,7 +71,7 @@ public class EmptyNode<K, V> extends Node<K, V> {
     }
 
     @Override
-    boolean checkColor() {
+    boolean isRed() {
         return false;
     }
 

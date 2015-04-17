@@ -39,7 +39,7 @@ public abstract class Node<K, V> {
 
         Node<K, V> cur = this;
 
-        while (cur.exitNode()) {
+        while (cur.isNotEmpty()) {
             int result = compare(key);
 
             if (result > 0)
@@ -87,7 +87,7 @@ public abstract class Node<K, V> {
     }
 
     public Node<K, V> delete(K key, Node<K, V> parent) {
-        if (this.exitNode()) {
+        if (this.isNotEmpty()) {
             int result = compare(key);;
 
             if (result > 0) {
@@ -116,7 +116,7 @@ public abstract class Node<K, V> {
     public Node<K, V> deleteSubTreeMaxNode(Node<K, V> parent) {
 
         Node<K, V> node;
-        if (right().exitNode()) {//最大値のノードが取得できるまで潜る
+        if (right().isNotEmpty()) {//最大値のノードが取得できるまで潜る
             node = right().deleteSubTreeMaxNode(this);
             if (parent == null)
                 return node;
@@ -134,16 +134,16 @@ public abstract class Node<K, V> {
 
     public Node deleteBalance(Node<K, V> parent){
 
-        if (rebuildFlag && !checkColor()) {
+        if (rebuildFlag && !isRed()) {
 
             if (0 > compare(parent.getKey())) { //自身がどちらの子かを調べる
-                boolean rightChild = parent.left().right().checkColor();
-                boolean leftChild = parent.left().left().checkColor();
+                boolean rightChild = parent.left().right().isRed();
+                boolean leftChild = parent.left().left().isRed();
 
 
-                if (!parent.checkColor()) { //親が黒
+                if (!parent.isRed()) { //親が黒
 
-                    if (!parent.left().checkColor()) { //左の子が黒
+                    if (!parent.left().isRed()) { //左の子が黒
 
                         if (!rightChild && !leftChild)
                             return rebuildThree(parent, Rotate.R);
@@ -171,13 +171,13 @@ public abstract class Node<K, V> {
                 }
 
             } else {
-                boolean rightChild = parent.right().right().checkColor();
-                boolean leftChild = parent.right().left().checkColor();
+                boolean rightChild = parent.right().right().isRed();
+                boolean leftChild = parent.right().left().isRed();
 
 
-                if (!parent.checkColor()) { //親が黒
+                if (!parent.isRed()) { //親が黒
 
-                    if (!parent.right().checkColor()) { //左の子が黒
+                    if (!parent.right().isRed()) { //左の子が黒
 
                         if (!rightChild && !leftChild)
                             return rebuildThree(parent, Rotate.L);
@@ -234,7 +234,7 @@ public abstract class Node<K, V> {
     protected Node rebuildThree(Node<K, V> parent, Rotate side) { // case3 再起
         if (side == Rotate.L) {
             Node<K, V> rightNode;
-            if (parent.right().exitNode())
+            if (parent.right().isNotEmpty())
                 rightNode = new RedNode<K, V>(parent.right().getKey(), parent.right().getValue(), parent.right().left(), parent.right().right()); // check
             else
                 rightNode = new EmptyNode<>();
@@ -244,7 +244,7 @@ public abstract class Node<K, V> {
 
         } else {
             Node<K, V> leftNode;
-            if (parent.left().exitNode())
+            if (parent.left().isNotEmpty())
                 leftNode = new RedNode<K, V>(parent.left().getKey(), parent.left().getValue(), parent.left().left(), parent.left().right()); // check
             else
                 leftNode = new EmptyNode<>();
@@ -305,7 +305,7 @@ public abstract class Node<K, V> {
     }
 
 
-    protected abstract boolean exitNode();
+    protected abstract boolean isNotEmpty();
 
     public abstract Node<K, V> createNode(K key, V value, Node<K, V> left, Node<K, V> right);
 
@@ -313,7 +313,7 @@ public abstract class Node<K, V> {
 
     abstract Rotate checkRotate(Rotate side);
 
-    abstract boolean checkColor();
+    abstract boolean isRed();
 
     public abstract Node replaceNode(Node<K, V> parent);
 
