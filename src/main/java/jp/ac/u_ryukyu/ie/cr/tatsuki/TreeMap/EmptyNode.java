@@ -59,38 +59,6 @@ public class EmptyNode<K, V> extends Node<K, V> {
         return this;
     }
 
-    @Override
-    public Node deleteBalance(Node<K, V> parent) {
-        if (rebuildFlag) {
-            Rotate editNodeSide;
-            if (0 > (parent.getKey().hashCode() - this.getKey().hashCode()))
-                editNodeSide = Rotate.R;
-            else
-                editNodeSide = Rotate.L;
-
-            DeleteRebuildFlag flag = parent.RebuildDelete(editNodeSide);
-
-
-            switch (flag) {
-                case two:
-                    return rebuildTwo(parent, editNodeSide);
-                case three:
-                    return rebuildThree(parent, editNodeSide);
-                case four:
-                    return rebuildFour(parent, editNodeSide);
-                case five:
-                    return rebuildfive(parent, editNodeSide);
-                case six:
-                    return rebuildsix(parent, editNodeSide);
-            }
-        }
-
-        if (0 > (parent.getKey().hashCode() - this.getKey().hashCode()))
-            return parent.createNode(parent.getKey(), parent.getValue(), parent.left(), this);
-        else
-            return parent.createNode(parent.getKey(), parent.getValue(), this, parent.right());
-
-    }
 
     @Override
     public Optional<V> get(K key) {
@@ -105,16 +73,6 @@ public class EmptyNode<K, V> extends Node<K, V> {
     @Override
     boolean checkColor() {
         return false;
-    }
-
-    @Override
-    DeleteRebuildFlag RebuildDelete(Rotate side) { //not use method
-        return null;
-    }
-
-    @Override
-    DeleteRebuildFlag childRebuildDelete(Rotate side) {
-        return DeleteRebuildFlag.allBlack;
     }
 
     @Override

@@ -11,7 +11,7 @@ public abstract class Node<K, V> {
     protected V value;
     protected Node<K, V> right;
     protected Node<K, V> left;
-
+    protected boolean rebuildFlag = false;
     public Node(K key, V value) {
         this.key = key;
         this.value = value;
@@ -24,12 +24,15 @@ public abstract class Node<K, V> {
         this.left = left;
     }
 
+    public void setRebuildFlag(boolean rebuildFlag){
+        this.rebuildFlag = rebuildFlag;
+    }
     public Node<K, V> left() {
         return left;
     }
 
-    public int compare(Node<K, V> parent) {
-        return (parent.getKey().hashCode() - key.hashCode());
+    public int compare(K parentKey) {
+        return (parentKey.hashCode() - getKey().hashCode());
     }
 
     public Optional<V> get(K key) {
@@ -37,7 +40,7 @@ public abstract class Node<K, V> {
         Node<K, V> cur = this;
 
         while (cur.exitNode()) {
-            int result = key.hashCode() - cur.getKey().hashCode();
+            int result = compare(key);
 
             if (result > 0)
                 cur = cur.right();
@@ -68,7 +71,7 @@ public abstract class Node<K, V> {
 
     public Node<K, V> put(K k, V value) {
 
-        int result = k.hashCode() - this.key.hashCode();
+        int result = compare(k);
 
         if (result > 0) {
             Node<K, V> node = right.put(k, value);
@@ -85,7 +88,7 @@ public abstract class Node<K, V> {
 
     public Node<K, V> delete(K key, Node<K, V> parent) {
         if (this.exitNode()) {
-            int result = key.hashCode() - this.key.hashCode();
+            int result = compare(key);;
 
             if (result > 0) {
                 Node<K, V> node = right.delete(key, this);
@@ -122,13 +125,94 @@ public abstract class Node<K, V> {
         }
 
 
-        node = this.replaceNode(parent); //怪しい地点
+        node = this.replaceNode(parent);
         if (parent == null)
             return node;
         return node.deleteBalance(parent);
 
     }
 
+    public Node deleteBalance(Node<K, V> parent){
+
+        if (rebuildFlag && !checkColor()) {
+
+            if (0 > compare(parent.getKey())) { //自身がどちらの子かを調べる
+                boolean rightChild = parent.left().right().checkColor();
+                boolean leftChild = parent.left().left().checkColor();
+
+
+                if (!parent.checkColor()) { //親が黒
+
+                    if (!parent.left().checkColor()) { //左の子が黒
+
+                        if (!rightChild && !leftChild)
+                            return rebuildThree(parent, Rotate.R);
+
+                        if (rightChild)
+                            return rebuildfive(parent, Rotate.R);
+                        else if (leftChild)
+                            return rebuildsix(parent, Rotate.R);
+
+
+                    } else { //左の子が赤
+                        return rebuildTwo(parent, Rotate.R);
+                    }
+
+                } else { //親が赤
+
+                    if (!rightChild && !leftChild)
+                        return rebuildFour(parent, Rotate.R);
+
+                    if (rightChild)
+                        return rebuildfive(parent, Rotate.R);
+                    else if (leftChild)
+                        return rebuildsix(parent, Rotate.R);
+
+                }
+
+            } else {
+                boolean rightChild = parent.right().right().checkColor();
+                boolean leftChild = parent.right().left().checkColor();
+
+
+                if (!parent.checkColor()) { //親が黒
+
+                    if (!parent.right().checkColor()) { //左の子が黒
+
+                        if (!rightChild && !leftChild)
+                            return rebuildThree(parent, Rotate.L);
+
+                        if (rightChild)
+                            return rebuildsix(parent, Rotate.L);
+                        else if (leftChild)
+                            return rebuildfive(parent, Rotate.L);
+
+
+                    } else { //左の子が赤
+                        return rebuildTwo(parent, Rotate.L);
+                    }
+
+                } else { //親が赤
+
+                    if (!rightChild && !leftChild)
+                        return rebuildFour(parent, Rotate.L);
+
+                    if (rightChild)
+                        return rebuildsix(parent, Rotate.L);
+                    else if (leftChild)
+                        return rebuildfive(parent, Rotate.L);
+
+                }
+            }
+
+        }
+
+        if (0 > (compare(parent.getKey())))
+            return parent.createNode(parent.getKey(), parent.getValue(), parent.left(), this);
+        else
+            return parent.createNode(parent.getKey(), parent.getValue(), this, parent.right());
+
+    }
 
     protected Node<K, V> rebuildTwo(Node<K, V> parent, Rotate side) { // case2
         if (side == Rotate.L) { // rotate Left
@@ -227,15 +311,9 @@ public abstract class Node<K, V> {
 
     abstract Node<K, V> insBalance();
 
-    public abstract Node deleteBalance(Node<K, V> Parent);
-
     abstract Rotate checkRotate(Rotate side);
 
     abstract boolean checkColor();
-
-    abstract DeleteRebuildFlag RebuildDelete(Rotate side);
-
-    abstract DeleteRebuildFlag childRebuildDelete(Rotate side);
 
     public abstract Node replaceNode(Node<K, V> parent);
 

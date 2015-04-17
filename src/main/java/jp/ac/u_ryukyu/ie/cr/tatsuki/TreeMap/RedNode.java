@@ -29,15 +29,6 @@ public class RedNode<K, V> extends Node<K, V> {
     }
 
     @Override
-    public Node deleteBalance(Node<K, V> parent) {
-
-        if (0 > (parent.getKey().hashCode() - this.getKey().hashCode()))
-            return parent.createNode(parent.getKey(), parent.getValue(), parent.left(), this);
-        else
-            return parent.createNode(parent.getKey(), parent.getValue(), this, parent.right());
-    }
-
-    @Override
     protected Node deleteNode() {
         return new EmptyNode(this.getKey());
     }
@@ -69,27 +60,6 @@ public class RedNode<K, V> extends Node<K, V> {
     @Override
     boolean checkColor() {
         return true;
-    }
-
-    @Override
-    DeleteRebuildFlag RebuildDelete(Rotate side) {
-
-        DeleteRebuildFlag flag;
-        if (side == Rotate.R) {
-            flag = this.left().childRebuildDelete(side);
-        } else {
-            flag = this.right().childRebuildDelete(side);
-        }
-
-        if (flag == DeleteRebuildFlag.allBlack)
-            return DeleteRebuildFlag.four;
-
-        return flag;
-    }
-
-    @Override
-    DeleteRebuildFlag childRebuildDelete(Rotate side) {
-        return DeleteRebuildFlag.two;
     }
 
     @Override

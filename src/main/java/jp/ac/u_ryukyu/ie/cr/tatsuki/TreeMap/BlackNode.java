@@ -27,76 +27,6 @@ public class BlackNode<K, V> extends Node<K, V> {
         return count;
     }
 
-    @Override
-    public Node deleteBalance(Node<K, V> parent) {
-        if (rebuildFlag) {
-            Rotate editNodeSide;
-            DeleteRebuildFlag flag;
-            if (0 > compare(parent)) { //自身がどちらの子かを調べる
-                editNodeSide = Rotate.R;//右の子
-                flag = parent.right().childRebuildDelete(Rotate.R);
-
-                if (parent.right().isBlack()) {
-                    boolean rightChild = this.right().checkColor();
-                    boolean leftChild = this.left().checkColor();
-
-                    if (!rightChild && !leftChild)
-                        return DeleteRebuildFlag.allBlack;
-
-                        if (rightChild)
-                            return DeleteRebuildFlag.five;
-                        else
-                            return DeleteRebuildFlag.six;
-
-                } else {
-                    //red
-                }
-
-            } else {
-                editNodeSide = Rotate.L;//左の子
-                flag = parent.right().childRebuildDelete(Rotate.L);
-
-                if (parent.left().isBlack()) {
-                    boolean rightChild = this.right().checkColor();
-                    boolean leftChild = this.left().checkColor();
-
-                    if (!rightChild && !leftChild)
-                        return DeleteRebuildFlag.allBlack;
-
-                    if (leftChild)
-                        return DeleteRebuildFlag.five;
-                    else
-                        return DeleteRebuildFlag.six;
-
-                } else {
-                    //red
-                }
-            }
-
-
-            if (flag == DeleteRebuildFlag.allBlack) {
-                if (parent.isBlack())
-                    return rebuildThree(parent, editNodeSide);
-                else
-                    return rebuildFour(parent, editNodeSide);
-            }
-
-            switch (flag) {
-                case two:
-                    return rebuildTwo(parent, editNodeSide);
-                case five:
-                    return rebuildfive(parent, editNodeSide);
-                case six:
-                    return rebuildsix(parent, editNodeSide);
-            }
-        }
-        if (0 > (compare(parent)))
-            return parent.createNode(parent.getKey(), parent.getValue(), parent.left(), this);
-        else
-            return parent.createNode(parent.getKey(), parent.getValue(), this, parent.right());
-
-    }
-
 
 
     @Override
@@ -153,48 +83,12 @@ public class BlackNode<K, V> extends Node<K, V> {
         return false;
     }
 
-    @Override
-    DeleteRebuildFlag RebuildDelete(Rotate side) {
 
-        DeleteRebuildFlag flag;
-        if (side == Rotate.R) {//どっち側のNodeを編集したか 右側を編集して来たならRが来る
-            flag = this.left().childRebuildDelete(side);
-        } else {
-            flag = this.right().childRebuildDelete(side);
-        }
 
-        if (flag == DeleteRebuildFlag.allBlack)
-            return DeleteRebuildFlag.three;
-
-        return flag;
-    }
-
-    @Override
-    DeleteRebuildFlag childRebuildDelete(Rotate side) {
-
-        boolean rightChild = this.right().checkColor();
-        boolean leftChild = this.left().checkColor();
-
-        if (!rightChild && !leftChild)
-            return DeleteRebuildFlag.allBlack;
-
-        if (side == Rotate.R) {//どっち側のNodeを編集したか 右側を編集して来たならRが来る
-            if (rightChild)
-                return DeleteRebuildFlag.five;
-            else
-                return DeleteRebuildFlag.six;
-        }
-
-        if (side == Rotate.L) {
-            if (leftChild)
-                return DeleteRebuildFlag.five;
-            else
-                return DeleteRebuildFlag.six;
-        }
-
-        return null;
-    }
-
+    /**
+     * @param parent
+     * @return
+     */
     @Override
     public Node replaceNode(Node<K, V> parent) {
 
