@@ -12,10 +12,9 @@ public class BlackNode<K, V> extends Node<K, V> {
 
 
     @Override
-    public Node deleteNode() {
+    public Tuple deleteNode() {
         EmptyNode<K, V> emptyNode = new EmptyNode<K, V>(key);
-        emptyNode.setRebuildFlag(true);
-        return emptyNode;
+        return new Tuple(emptyNode, true);
     }
 
     @Override
@@ -26,7 +25,6 @@ public class BlackNode<K, V> extends Node<K, V> {
         count--;
         return count;
     }
-
 
 
     @Override
@@ -84,13 +82,12 @@ public class BlackNode<K, V> extends Node<K, V> {
     }
 
 
-
     /**
      * @param parent
      * @return
      */
     @Override
-    public Node replaceNode(Node<K, V> parent) {
+    public Tuple replaceNode(Node<K, V> parent) {
 
         Node<K, V> newNode = null;
         if (!this.left().isNotEmpty() && !this.right().isNotEmpty()) { //自身を削除する
@@ -98,15 +95,16 @@ public class BlackNode<K, V> extends Node<K, V> {
 
         } else if (this.left().isNotEmpty() && !this.right().isNotEmpty()) { //左の部分木を昇格させる
             newNode = createNode(left().getKey(), left().getValue(), left().left(), left().right());
+
             if (!this.left().isRed()) //昇格させる木のrootが黒だったらバランスを取る
-                newNode.setRebuildFlag(true);
-            return newNode;
+                return new Tuple(newNode, true);
+            return new Tuple(newNode, false);
 
         } else if (!this.left().isNotEmpty() && this.right().isNotEmpty()) { //右の部分木を昇格させる
             newNode = createNode(right().getKey(), right().getValue(), right().left(), right().right());
             if (!this.right().isRed()) //昇格させる木のrootが黒だったらバランスを取る
-                newNode.setRebuildFlag(true);
-            return newNode;
+                return new Tuple(newNode, true);
+            return new Tuple(newNode, false);
 
         } else {//子ノードが左右にある場合
             //左の部分木の最大の値を持つNodeと自身を置き換える
@@ -118,16 +116,15 @@ public class BlackNode<K, V> extends Node<K, V> {
 
 
             if (this.left().right().isNotEmpty()) { //左の部分木が右の子を持っているか
-                Node<K, V> leftSubTreeNode = this.left().deleteSubTreeMaxNode(null);//最大値を削除した左の部分木を返す。rootはthisと同じ。
-                Node<K, V> newParent = createNode(cur.getKey(), cur.getValue(), leftSubTreeNode, this.right()); //rootをcurと入れ替えることでNodeの削除は完了する
-                newNode = leftSubTreeNode.deleteBalance(newParent);
+                Tuple leftSubTreeNode = this.left().deleteSubTreeMaxNode(null);//最大値を削除した左の部分木を返す。rootはthisと同じ。
+                Node<K, V> newParent = createNode(cur.getKey(), cur.getValue(), leftSubTreeNode.getNode(), this.right()); //rootをcurと入れ替えることでNodeの削除は完了する
+                return leftSubTreeNode.getNode().deleteBalance(newParent, leftSubTreeNode.getRebuildFlag());
 
-                return newNode;
 
             } else {
-                Node<K, V> leftSubTreeNode = this.left().replaceNode(this);//右の子がいなかった場合、左の子を昇格させるだけで良い。
-                Node newParent = createNode(this.left().getKey(), this.left().getValue(), leftSubTreeNode, this.right());
-                return leftSubTreeNode.deleteBalance(newParent);
+                Tuple leftSubTreeNode = this.left().replaceNode(this);//右の子がいなかった場合、左の子を昇格させるだけで良い。
+                Node newParent = createNode(this.left().getKey(), this.left().getValue(), leftSubTreeNode.getNode(), this.right());
+                return leftSubTreeNode.getNode().deleteBalance(newParent, leftSubTreeNode.getRebuildFlag());
 
             }
         }

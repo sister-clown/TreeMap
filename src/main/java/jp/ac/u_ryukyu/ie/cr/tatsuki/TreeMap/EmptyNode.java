@@ -45,13 +45,13 @@ public class EmptyNode<K, V> extends Node<K, V> {
     }
 
     @Override
-    public Node replaceNode(Node<K, V> parent) { // not use method
-        return this;
+    public Tuple replaceNode(Node<K, V> parent) { // not use method
+        return new Tuple(this, false);
     }
 
     @Override
-    protected Node deleteNode() { //not use method
-        return this;
+    protected Tuple deleteNode() { //not use method
+        return new Tuple(this, false);
     }
 
     @Override
