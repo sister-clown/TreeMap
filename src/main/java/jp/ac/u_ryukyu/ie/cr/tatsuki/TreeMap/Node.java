@@ -37,7 +37,7 @@ public abstract class Node<K, V> {
         Node<K, V> cur = this;
 
         while (cur.isNotEmpty()) {
-            int result = compare(key);
+            int result = cur.compare(key);
 
             if (result > 0)
                 cur = cur.right();
