@@ -59,12 +59,6 @@ public class EmptyNode<K, V> extends Node<K, V> {
         return this;
     }
 
-
-    @Override
-    public Optional<V> get(K key) {
-        return Optional.ofNullable((V) getValue());
-    }
-
     @Override
     Rotate checkRotate(Rotate side) {
         return N;

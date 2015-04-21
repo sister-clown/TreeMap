@@ -18,6 +18,8 @@ public class TreeMapTest {
         TreeMap<Integer, Integer> map5 = map4.put(4,4);
         for (int count = 100; count > 0; count--) {
             map = map.put(count, count);
+            map.checkBlackCount();
+            System.out.println("-------------------------------------------");
         }
 
         for (int count = 100; count > -10; count--) {
