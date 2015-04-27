@@ -29,9 +29,9 @@ public class RedNode<K, V> extends Node<K, V> {
     }
 
     @Override
-    protected Tuple deleteNode() {
+    protected Node deleteNode() {
         EmptyNode emptyNode = new EmptyNode(this.getKey());
-        return new Tuple(emptyNode, false);
+        return emptyNode;
     }
 
     @Override
@@ -64,7 +64,7 @@ public class RedNode<K, V> extends Node<K, V> {
     }
 
     @Override
-    public Tuple replaceNode(Node<K, V> parent) {
+    public Node replaceNode(Node<K, V> parent) throws RotateParent {
 
         Node<K, V> newNode = null;
         if (!this.left().isNotEmpty() && !this.right().isNotEmpty()) { //自身を削除する
@@ -72,11 +72,11 @@ public class RedNode<K, V> extends Node<K, V> {
 
         } else if (this.left().isNotEmpty() && !this.right().isNotEmpty()) { //左の部分木を昇格させる
             newNode = left().createNode(left().getKey(), left().getValue(), left().left(), left().right());
-            return new Tuple(newNode,false);
+            return newNode;
 
         } else if (!this.left().isNotEmpty() && this.right().isNotEmpty()) { //右の部分木を昇格させる
             newNode = right().createNode(right().getKey(), right().getValue(), right().left(), right().right());
-            return new Tuple(newNode,false);
+            return newNode;
 
         } else {//子ノードが左右にある場合
             //左の部分木の最大の値を持つNodeと自身を置き換える
@@ -86,17 +86,31 @@ public class RedNode<K, V> extends Node<K, V> {
                 cur = cur.right();
             }
 
-            Tuple leftSubTreeNode = null;
+            Node leftSubTreeNode = null;
 
             if (this.left().right().isNotEmpty()) {
-                leftSubTreeNode = this.left().deleteSubTreeMaxNode(null);
-                newNode = createNode(cur.getKey(), cur.getValue(), leftSubTreeNode.getNode(), this.right());
-                return leftSubTreeNode.getNode().deleteBalance(newNode,leftSubTreeNode.getRebuildFlag());
-
+                try {
+                    leftSubTreeNode = this.left().deleteSubTreeMaxNode(null,Rotate.L);
+                    newNode = createNode(cur.getKey(), cur.getValue(), leftSubTreeNode, this.right());
+                    return newNode;
+                } catch (RotateParent e) {
+                    leftSubTreeNode = e.getParent();
+                    Node<K, V> newParent = createNode(cur.getKey(), cur.getValue(), leftSubTreeNode, this.right());
+                    return leftSubTreeNode.deleteBalance(newParent);
+                }
             } else {
-                leftSubTreeNode = this.left().replaceNode(this);
-                newNode = createNode(cur.getKey(), cur.getValue(), leftSubTreeNode.getNode(), this.right());
-                return leftSubTreeNode.getNode().deleteBalance(newNode,leftSubTreeNode.getRebuildFlag());
+                try {
+                    leftSubTreeNode = this.left().replaceNode(this);
+                    newNode = createNode(cur.getKey(), cur.getValue(), leftSubTreeNode, this.right());
+                    return newNode;
+                } catch (RotateParent e) {
+                    Node node = e.getParent();
+                    //if (parent != null) {
+                    Node newParent = createNode(this.left().getKey(), this.left().getValue(), leftSubTreeNode, this.right());
+                    return node.deleteBalance(newParent);
+                    // }
+                    // return node;
+                }
             }
 
         }

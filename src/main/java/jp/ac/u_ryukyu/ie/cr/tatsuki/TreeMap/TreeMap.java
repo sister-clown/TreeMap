@@ -49,8 +49,8 @@ public class TreeMap<K, V> {
     }
 
 
-    public TreeMap<K,V> delete(K key) {
-       Node node = root.delete(key,null).getNode();
+    public TreeMap<K,V> delete(K key) throws RotateParent {
+       Node node = root.delete(key, null,Rotate.N);
         if (node == null)
             return this; // not key
         if (!node.isNotEmpty())
