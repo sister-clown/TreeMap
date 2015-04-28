@@ -107,7 +107,6 @@ public abstract class Node<K, V> {
                         return parent.createNode(parent.getKey(), parent.getValue(), parent.left(), node);
                     else
                         return parent.createNode(parent.getKey(), parent.getValue(), node, parent.right());
-
                 }
                 if (side == Rotate.L)
                     return parent.createNode(parent.getKey(), parent.getValue(), node, parent.right());
@@ -126,26 +125,17 @@ public abstract class Node<K, V> {
 
     public Node<K, V> deleteSubTreeMaxNode(Node<K, V> parent, Rotate side) throws RotateParent {
         Node<K, V> node;
-        if (right().isNotEmpty()) {//最大値のノードが取得できるまで潜る
-            try {
+        try {
+            if (right().isNotEmpty()) {//最大値のノードが取得できるまで潜る
                 node = right().deleteSubTreeMaxNode(this, Rotate.R);
-                // return node;
-            } catch (RotateParent e) {
-                node = e.getParent();
-                if (parent == null)
-                    throw e;
-                return node.deleteBalance(parent);
-            }
-        } else {
-            try {
+              } else {
                 node = this.replaceNode(parent);
-                // return node;
-            } catch (RotateParent e) {
-                node = e.getParent();
-                if (parent == null)
-                    throw e;
-                return node.deleteBalance(parent);
             }
+        } catch (RotateParent e) {
+            node = e.getParent();
+            if (parent == null)
+                throw e;
+            return node.deleteBalance(parent);
         }
         if (parent == null)
             return node;

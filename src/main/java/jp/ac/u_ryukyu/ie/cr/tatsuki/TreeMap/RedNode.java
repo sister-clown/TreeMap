@@ -36,26 +36,19 @@ public class RedNode<K, V> extends Node<K, V> {
 
     @Override
     Rotate checkRotate(Rotate side) {
-
         if (side == L) {
             if (left.isRed())
                 return R;
-
             else if (right.isRed())
                 return LR;
-
             return N;
         } else {
-
             if (left.isRed())
                 return RL;
-
             else if (right.isRed())
                 return L;
-
             return N;
         }
-
     }
 
     @Override
@@ -65,19 +58,15 @@ public class RedNode<K, V> extends Node<K, V> {
 
     @Override
     public Node replaceNode(Node<K, V> parent) throws RotateParent {
-
         Node<K, V> newNode = null;
         if (!this.left().isNotEmpty() && !this.right().isNotEmpty()) { //自身を削除する
             return deleteNode();
-
         } else if (this.left().isNotEmpty() && !this.right().isNotEmpty()) { //左の部分木を昇格させる
             newNode = left().createNode(left().getKey(), left().getValue(), left().left(), left().right());
             return newNode;
-
         } else if (!this.left().isNotEmpty() && this.right().isNotEmpty()) { //右の部分木を昇格させる
             newNode = right().createNode(right().getKey(), right().getValue(), right().left(), right().right());
             return newNode;
-
         } else {//子ノードが左右にある場合
             //左の部分木の最大の値を持つNodeと自身を置き換える
             Node<K, V> cur = this.left();
@@ -85,9 +74,7 @@ public class RedNode<K, V> extends Node<K, V> {
             while (cur.right().isNotEmpty()) {
                 cur = cur.right();
             }
-
             Node leftSubTreeNode = null;
-
             if (this.left().right().isNotEmpty()) {
                 try {
                     leftSubTreeNode = this.left().deleteSubTreeMaxNode(null,Rotate.L);
@@ -105,11 +92,8 @@ public class RedNode<K, V> extends Node<K, V> {
                     return newNode;
                 } catch (RotateParent e) {
                     Node node = e.getParent();
-                    //if (parent != null) {
                     Node newParent = createNode(this.left().getKey(), this.left().getValue(), leftSubTreeNode, this.right());
                     return node.deleteBalance(newParent);
-                    // }
-                    // return node;
                 }
             }
 

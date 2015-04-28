@@ -88,7 +88,6 @@ public class BlackNode<K, V> extends Node<K, V> {
      */
     @Override
     public Node replaceNode(Node<K, V> parent) throws RotateParent {
-
         Node<K, V> newNode = null;
         if (!this.left().isNotEmpty() && !this.right().isNotEmpty()) { //自身を削除する
             return deleteNode();//黒が1つ減るので木のバランスを取る
@@ -126,15 +125,10 @@ public class BlackNode<K, V> extends Node<K, V> {
                     return newParent;
                 } catch (RotateParent e) {
                     Node node = e.getParent();
-                    //if (parent != null) {
                     Node newParent = createNode(this.left().getKey(), this.left().getValue(), leftSubTreeNode, this.right());
                     return node.deleteBalance(newParent);
-                    // }
-                    // return node;
                 }
             }
         }
-
     }
-
 }

@@ -14,12 +14,12 @@ import java.util.Random;
 public class TreeMapDelete {
     public static void main(String args[]) throws RotateParent {
         TreeMap<Integer, Integer> map = new TreeMap();
-        for (int count = 1; count < 10000; count++) {
+        for (int count = 1; count < 3000; count++) {
             map = map.put(count, count);
         }
 
         ArrayList<Integer> list = new ArrayList();
-        for (int i = 1; i < 10000; i++) {
+        for (int i = 1; i < 3000; i++) {
             list.add(i);
         }
 
