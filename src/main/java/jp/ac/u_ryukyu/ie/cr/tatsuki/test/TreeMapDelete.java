@@ -2,20 +2,22 @@ package jp.ac.u_ryukyu.ie.cr.tatsuki.test;
 
 import jp.ac.u_ryukyu.ie.cr.tatsuki.TreeMap.RotateParent;
 import jp.ac.u_ryukyu.ie.cr.tatsuki.TreeMap.TreeMap;
+import org.junit.Test;
 
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.Optional;
-import java.util.Random;
 
 /**
  * Created by e115731 on 15/04/04.
  */
 public class TreeMapDelete {
+
+    @Test
     public static void main(String args[]) throws RotateParent {
         TreeMap<Integer, Integer> map = new TreeMap();
         for (int count = 1; count < 3000; count++) {
             map = map.put(count, count);
+            map.checkBlackCount();
         }
 
         ArrayList<Integer> list = new ArrayList();

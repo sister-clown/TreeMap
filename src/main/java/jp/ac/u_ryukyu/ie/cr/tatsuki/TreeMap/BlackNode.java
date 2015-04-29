@@ -1,5 +1,7 @@
 package jp.ac.u_ryukyu.ie.cr.tatsuki.TreeMap;
 
+import org.junit.Test;
+
 import static jp.ac.u_ryukyu.ie.cr.tatsuki.TreeMap.Rotate.*;
 
 
@@ -18,12 +20,13 @@ public class BlackNode<K, V> extends Node<K, V> {
     }
 
     @Override
-    protected int checkBlackCount(int count) { // test method
+    @Test
+    protected int checkDepth(int count, int minCount) { // test method
         count++;
-        left().checkBlackCount(count);
-        right().checkBlackCount(count);
+        minCount = left().checkDepth(count, minCount);
+        minCount = right().checkDepth(count, minCount);
         count--;
-        return count;
+        return minCount;
     }
 
 
@@ -109,7 +112,7 @@ public class BlackNode<K, V> extends Node<K, V> {
             }
             if (this.left().right().isNotEmpty()) { //左の部分木が右の子を持っているか
                 try {
-                    Node leftSubTreeNode = this.left().deleteSubTreeMaxNode(null,Rotate.L);//最大値を削除した左の部分木を返す。rootはthisと同じ。
+                    Node leftSubTreeNode = this.left().deleteSubTreeMaxNode(null, Rotate.L);//最大値を削除した左の部分木を返す。rootはthisと同じ。
                     Node<K, V> newParent = createNode(cur.getKey(), cur.getValue(), leftSubTreeNode, this.right()); //rootをcurと入れ替えることでNodeの削除は完了する
                     return newParent;
                 } catch (RotateParent e) {

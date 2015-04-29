@@ -1,6 +1,8 @@
 package jp.ac.u_ryukyu.ie.cr.tatsuki.TreeMap;
 
 
+import org.junit.Test;
+
 import java.util.Optional;
 
 
@@ -59,8 +61,9 @@ public class TreeMap<K, V> {
         return new TreeMap(newRoot,0);
     }
 
+    @Test
     public void checkBlackCount(){
-        root.checkBlackCount(0);
+        root.checkBlackCount(0,0);
         System.out.println("-----------------------------------");
     }
 }

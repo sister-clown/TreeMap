@@ -1,11 +1,14 @@
 package jp.ac.u_ryukyu.ie.cr.tatsuki.TreeMap;
 
-import java.util.*;
+import org.junit.Test;
+
+import java.util.Optional;
+
 
 /**
  * Created by e115731 on 15/03/23.
  */
-public abstract class Node<K, V> {
+public abstract class Node<K, V>  {
 
     protected K key;
     protected V value;
@@ -288,5 +291,6 @@ public abstract class Node<K, V> {
 
     protected abstract Node deleteNode() throws RotateParent;
 
-    protected abstract int checkBlackCount(int count); // test method
+    @Test
+    protected abstract int checkDepth (int count , int minCount); // test method
 }

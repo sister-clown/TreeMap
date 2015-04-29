@@ -1,5 +1,7 @@
 package jp.ac.u_ryukyu.ie.cr.tatsuki.TreeMap;
 
+import org.junit.Test;
+
 import static jp.ac.u_ryukyu.ie.cr.tatsuki.TreeMap.Rotate.*;
 
 /**
@@ -102,9 +104,12 @@ public class RedNode<K, V> extends Node<K, V> {
 
 
     @Override
-    protected int checkBlackCount(int count) { // test method
-        left().checkBlackCount(count);
-        right().checkBlackCount(count);
-        return count;
+    @Test
+    protected int checkDepth(int count,int minCount) { // test method
+        count ++;
+        minCount = left().checkDepth(count, minCount);
+        minCount = right().checkDepth(count, minCount);
+        count --;
+        return minCount;
     }
 }
