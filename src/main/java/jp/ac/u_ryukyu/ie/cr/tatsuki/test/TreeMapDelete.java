@@ -31,7 +31,6 @@ public class TreeMapDelete {
             map = newMap;
             map.checkDepth();
         }
-
         System.out.println("end");
     }
 }
