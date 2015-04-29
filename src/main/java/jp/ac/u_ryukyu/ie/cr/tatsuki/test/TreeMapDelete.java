@@ -22,7 +22,6 @@ public class TreeMapDelete {
         for (int i = 1; i < 3000; i++) {
             list.add(i);
         }
-
 //        test(map);
         Collections.shuffle(list);
         for (Integer num : list) {

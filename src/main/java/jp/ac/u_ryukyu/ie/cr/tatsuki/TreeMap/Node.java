@@ -25,23 +25,20 @@ public abstract class Node<K, V> {
         this.left = left;
     }
 
-    public void setRebuildFlag(boolean rebuildFlag) {
-        this.rebuildFlag = rebuildFlag;
-    }
-
     public Node<K, V> left() {
         return left;
     }
 
-    public int compare(K parentKey) {
-        return (parentKey.hashCode() - getKey().hashCode());
+    public int compare(Comparable<? super K> parentKey) {
+        return parentKey.compareTo(getKey());
+
     }
 
     public Optional<V> get(K key) {
         Node<K, V> cur = this;
-
+        Comparable<? super K> k = (Comparable<? super K>) key;
         while (cur.isNotEmpty()) {
-            int result = compare(key);
+            int result = cur.compare(k);
             if (result > 0)
                 cur = cur.right();
             else if (result < 0)
@@ -66,9 +63,11 @@ public abstract class Node<K, V> {
     }
 
 
-    public Node<K, V> put(K k, V value) {
+    public Node<K, V> put(Comparable<? super K> k, V value) {
+        if (!isNotEmpty()) {
+            return createNode((K)k, value, left, right);
+        }
         int result = compare(k);
-
         if (result > 0) {
             Node<K, V> node = right.put(k, value);
             node = createNode(key, this.value, left, node);
@@ -81,7 +80,7 @@ public abstract class Node<K, V> {
 
     }
 
-    public Node<K, V> delete(K key, Node<K, V> parent, Rotate side) throws RotateParent {
+    public Node<K, V> delete(Comparable<? super K> key, Node<K, V> parent, Rotate side) throws RotateParent {
         if (this.isNotEmpty()) {
             int result = compare(key);
 
@@ -128,7 +127,7 @@ public abstract class Node<K, V> {
         try {
             if (right().isNotEmpty()) {//最大値のノードが取得できるまで潜る
                 node = right().deleteSubTreeMaxNode(this, Rotate.R);
-              } else {
+            } else {
                 node = this.replaceNode(parent);
             }
         } catch (RotateParent e) {
@@ -148,7 +147,7 @@ public abstract class Node<K, V> {
 
     public Node deleteBalance(Node<K, V> parent) throws RotateParent {
         if (!isRed()) {
-            if (0 > compare(parent.getKey())) { //自身がどちらの子かを調べる
+            if (0 > compare((Comparable<? super K>) parent.getKey())) { //自身がどちらの子かを調べる
                 boolean rightChild = parent.left().right().isRed();
                 boolean leftChild = parent.left().left().isRed();
 
@@ -196,7 +195,7 @@ public abstract class Node<K, V> {
                 }
             }
         }
-        if (0 > (compare(parent.getKey())))
+        if (0 > (compare((Comparable<? super K>) parent.getKey())))
             return parent.createNode(parent.getKey(), parent.getValue(), parent.left(), this);
         else
             return parent.createNode(parent.getKey(), parent.getValue(), this, parent.right());

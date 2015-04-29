@@ -38,7 +38,7 @@ public class TreeMap<K, V> {
             return new TreeMap<K, V>(newRoot, size + 1);
         }
 
-        Node<K, V> newEntry = root.put(key, value);
+        Node<K, V> newEntry = root.put((Comparable<? super K>)key, value);
         Node<K, V> newRoot = new BlackNode(newEntry.getKey(), newEntry.getValue(), newEntry.left(), newEntry.right());
         return new TreeMap(newRoot, 0);
     }
@@ -50,7 +50,7 @@ public class TreeMap<K, V> {
 
 
     public TreeMap<K,V> delete(K key) throws RotateParent {
-       Node node = root.delete(key, null,Rotate.N);
+       Node node = root.delete((Comparable<? super K>)key, null,Rotate.N);
         if (node == null)
             return this; // not key
         if (!node.isNotEmpty())
