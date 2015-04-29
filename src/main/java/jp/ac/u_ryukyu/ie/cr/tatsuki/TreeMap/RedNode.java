@@ -31,7 +31,7 @@ public class RedNode<K, V> extends Node<K, V> {
     }
 
     @Override
-    protected Node deleteNode() {
+    protected Node deleteNode() throws RotateParent{
         EmptyNode emptyNode = new EmptyNode(this.getKey());
         return emptyNode;
     }
