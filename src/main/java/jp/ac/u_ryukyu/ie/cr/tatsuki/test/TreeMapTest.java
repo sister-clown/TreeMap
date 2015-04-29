@@ -1,6 +1,5 @@
 package jp.ac.u_ryukyu.ie.cr.tatsuki.test;
 
-import jp.ac.u_ryukyu.ie.cr.tatsuki.TreeMap.Node;
 import jp.ac.u_ryukyu.ie.cr.tatsuki.TreeMap.TreeMap;
 
 import java.util.Optional;
@@ -18,7 +17,7 @@ public class TreeMapTest {
         TreeMap<Integer, Integer> map5 = map4.put(4,4);
         for (int count = 100; count > 0; count--) {
             map = map.put(count, count);
-            map.checkBlackCount();
+            map.checkDepth();
             System.out.println("-------------------------------------------");
         }
 

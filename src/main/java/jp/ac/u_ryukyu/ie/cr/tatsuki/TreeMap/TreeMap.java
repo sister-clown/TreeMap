@@ -62,8 +62,8 @@ public class TreeMap<K, V> {
     }
 
     @Test
-    public void checkBlackCount(){
-        root.checkBlackCount(0,0);
+    public void checkDepth(){
+        root.checkDepth(0,0);
         System.out.println("-----------------------------------");
     }
 }
