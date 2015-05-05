@@ -14,7 +14,6 @@ public abstract class Node<K, V>  {
     protected V value;
     protected Node<K, V> right;
     protected Node<K, V> left;
-    protected boolean rebuildFlag = false;
 
     public Node(K key, V value) {
         this.key = key;
@@ -32,8 +31,8 @@ public abstract class Node<K, V>  {
         return left;
     }
 
-    public int compare(Comparable<? super K> parentKey) {
-        return parentKey.compareTo(getKey());
+    public int compare(Comparable<? super K> compareKey) {
+        return compareKey.compareTo(getKey());
 
     }
 

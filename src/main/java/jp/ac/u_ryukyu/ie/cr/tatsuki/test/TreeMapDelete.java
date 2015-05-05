@@ -15,13 +15,13 @@ public class TreeMapDelete {
     @Test
     public static void main(String args[]) throws RotateParent {
         TreeMap<Integer, Integer> map = new TreeMap();
-        for (int count = 1; count < 3000; count++) {
+        for (int count = 1; count < 1000; count++) {
             map = map.put(count, count);
             map.checkDepth();
         }
 
         ArrayList<Integer> list = new ArrayList();
-        for (int i = 1; i < 3000; i++) {
+        for (int i = 1; i < 1000; i++) {
             list.add(i);
         }
         Collections.shuffle(list);
