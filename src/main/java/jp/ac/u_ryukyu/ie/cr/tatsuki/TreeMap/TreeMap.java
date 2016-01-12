@@ -3,50 +3,47 @@ package jp.ac.u_ryukyu.ie.cr.tatsuki.TreeMap;
 
 import org.junit.Test;
 
+import java.util.Comparator;
 import java.util.Iterator;
 import java.util.Optional;
 import java.util.Stack;
 
 
-/**
- * Created by e115731 on 15/03/23.
- */
 public class TreeMap<K, V> {
     final Node<K, V> root;
-    final int size;
+    final Comparator comparator;
 
     public TreeMap() {
-        this.root = new EmptyNode();
-        this.size = 0;
+        this.root = new EmptyNode<>();
+        this.comparator = new DefaultComparator<K>();
     }
 
+    public TreeMap(Comparator comparator) {
+        this.root = new EmptyNode<>();
+        this.comparator = comparator;
+    }
+
+    public TreeMap(Node<K, V> root, Comparator comparator) {
+        this.root = root;
+        this.comparator = comparator;
+    }
 
     public Node getRoot() {
         return root;
     }
 
-    public TreeMap(Node<K, V> root, int size) {
-        this.root = root;
-        this.size = size;
-    }
-
     public Optional<V> get(final K key) {
-        return root.get(key);
+        return root.get(key, this.comparator);
     }
 
-    public TreeMap put(K key, V value) {
-
-        if (key == null || value == null)  // null check
-            throw new NullPointerException();
-
+    public TreeMap<K, V> put(K key, V value) {
         if (isEmpty()) {
-            Node<K, V> newRoot = new BlackNode(key, value, new EmptyNode(), new EmptyNode());
-            return new TreeMap<K, V>(newRoot, size + 1);
+            Node<K, V> newRoot = new BlackNode<>(key, value, new EmptyNode<K,V>(), new EmptyNode<K,V>());
+            return new TreeMap<>(newRoot, this.comparator);
         }
-
-        Node<K, V> newEntry = root.put((Comparable<? super K>) key, value);
-        Node<K, V> newRoot = new BlackNode(newEntry.getKey(), newEntry.getValue(), newEntry.left(), newEntry.right());
-        return new TreeMap(newRoot, 0);
+        Node<K, V> newEntry = root.put(key, value, this.comparator);
+        Node<K, V> newRoot = new BlackNode<>(newEntry.getKey(), newEntry.getValue(), newEntry.left(), newEntry.right());
+        return new TreeMap<>(newRoot, this.comparator);
     }
 
 
@@ -54,25 +51,23 @@ public class TreeMap<K, V> {
         return !root.isNotEmpty();
     }
 
-
     public TreeMap<K, V> delete(K key) {
-        Node node = null;
-        try {
-            node = root.delete((Comparable<? super K>) key, null, Rotate.N);
-        } catch (RotateParent rotateParent) {
-        }
-        if (node == null)
+        if (key == null)
+            return this;
+        rebuildNode rootRebuildNode = root.delete(key, null, comparator, Rotate.N);
+        if (!rootRebuildNode.notEmpty())
             return this; // not key
-        if (!node.isNotEmpty())
-            return new TreeMap(new EmptyNode<>(), 0);
-        Node newRoot = new BlackNode(node.getKey(), node.getValue(), node.left(), node.right());
-        return new TreeMap(newRoot, 0);
+        Node root = rootRebuildNode.getNode();
+        if (!root.isNotEmpty())
+            return new TreeMap<>(new EmptyNode<>(), this.comparator);
+        BlackNode newRoot = new BlackNode<>(root.getKey(), root.getValue(),root.left(),root.right());
+        return new TreeMap<>(newRoot, this.comparator);
     }
 
     public Iterator<K> keys() {
         return new Iterator<K>() {
-            Stack<Node> nodeStack = new Stack();
-            Node currentNode = root;
+            Stack<Node<K, V>> nodeStack = new Stack<>();
+            Node<K, V> currentNode = root;
 
             @Override
             public boolean hasNext() {
@@ -81,13 +76,13 @@ public class TreeMap<K, V> {
 
             @Override
             public K next() {
-                K key = (K) currentNode.getKey();
+                K key = currentNode.getKey();
 
                 if (currentNode.left().isNotEmpty()) {
                     nodeStack.push(currentNode);
                     currentNode = currentNode.left();
                     return key;
-                } else  if (currentNode.right().isNotEmpty()) {
+                } else if (currentNode.right().isNotEmpty()) {
                     currentNode = currentNode.right();
                     return key;
                 } else if (nodeStack.isEmpty()) {

@@ -3,11 +3,9 @@ package jp.ac.u_ryukyu.ie.cr.tatsuki.TreeMap;
 import org.junit.Assert;
 import org.junit.Test;
 
-import static jp.ac.u_ryukyu.ie.cr.tatsuki.TreeMap.Rotate.N;
+import java.util.Comparator;
 
-/**
- * Created by e115731 on 15/03/25.
- */
+
 public class EmptyNode<K, V> extends Node<K, V> {
 
     public EmptyNode() {
@@ -37,32 +35,28 @@ public class EmptyNode<K, V> extends Node<K, V> {
 
     @Override
     public Node<K, V> createNode(K key, V value, Node<K, V> left, Node<K, V> right) {
-        return new RedNode<K, V>(key, value, new EmptyNode<K, V>(), new EmptyNode<K, V>());
+        return new RedNode<>(key, value, new EmptyNode<>(), new EmptyNode<>());
     }
 
 
-    public Node<K, V> put(K k, V value) {
-        return new RedNode(k, value, new EmptyNode<K, V>(), new EmptyNode<K, V>());
+    @Override
+    public rebuildNode<K, V> replaceNode(Node<K, V> parent, Comparator ctr) { // not use method
+        return new rebuildNode<>(false, this);
     }
 
     @Override
-    public Node replaceNode(Node<K, V> parent) { // not use method
-        return this;
+    protected rebuildNode<K, V> deleteNode() { //not use method
+        return new rebuildNode<>(false, this);
     }
 
     @Override
-    protected Node deleteNode() { //not use method
-        return this;
-    }
-
-    @Override
-    Node insBalance() {
+    Node<K, V> insBalance() {
         return this;
     }
 
     @Override
     Rotate checkRotate(Rotate side) {
-        return N;
+        return Rotate.N;
     }
 
     @Override
@@ -72,12 +66,12 @@ public class EmptyNode<K, V> extends Node<K, V> {
 
     @Override
     @Test
-    protected int checkDepth(int count,int minCount) { // test method
+    protected int checkDepth(int count, int minCount) { // test method
         if (count < minCount | minCount == 0)
             minCount = count;
         System.out.println("depth = " + count);
 
-        Assert.assertTrue(count <=  2 * minCount);
+        Assert.assertTrue(count <= 2 * minCount);
         return minCount;
     }
 

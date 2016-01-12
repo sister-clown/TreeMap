@@ -2,13 +2,11 @@ package jp.ac.u_ryukyu.ie.cr.tatsuki.TreeMap;
 
 import org.junit.Test;
 
+import java.util.Comparator;
 import java.util.Optional;
 
 
-/**
- * Created by e115731 on 15/03/23.
- */
-public abstract class Node<K, V>  {
+public abstract class Node<K, V> {
 
     protected K key;
     protected V value;
@@ -31,16 +29,15 @@ public abstract class Node<K, V>  {
         return left;
     }
 
-    public int compare(Comparable<? super K> compareKey) {
-        return compareKey.compareTo(getKey());
-
+    @SuppressWarnings("unchecked")
+    public int compare(K compareKey, Comparator ctr) {
+        return ctr.compare(compareKey, this.getKey());
     }
 
-    public Optional<V> get(K key) {
+    public Optional<V> get(K key, Comparator ctr) {
         Node<K, V> cur = this;
-        Comparable<? super K> k = (Comparable<? super K>) key;
         while (cur.isNotEmpty()) {
-            int result = cur.compare(k);
+            int result = cur.compare(key, ctr);
             if (result > 0)
                 cur = cur.right();
             else if (result < 0)
@@ -65,112 +62,112 @@ public abstract class Node<K, V>  {
     }
 
 
-    public Node<K, V> put(Comparable<? super K> k, V value) {
+    public Node<K, V> put(K k, V value, Comparator ctr) {
         if (!isNotEmpty()) {
-            return createNode((K)k, value, left, right);
+            return createNode(k, value, left, right);
         }
-        int result = compare(k);
+        int result = compare(k, ctr);
         if (result > 0) {
-            Node<K, V> node = right.put(k, value);
+            Node<K, V> node = right.put(k, value, ctr);
             node = createNode(key, this.value, left, node);
             return node.insBalance();
         } else if (result < 0) {
-            Node node = left.put(k, value);
+            Node<K, V> node = left.put(k, value, ctr);
             return createNode(key, this.value, node, right).insBalance();
         }
         return createNode(key, value, left, right); // equals
 
     }
 
-    public Node<K, V> delete(Comparable<? super K> key, Node<K, V> parent, Rotate side) throws RotateParent {
+    @SuppressWarnings("unchecked")
+    public rebuildNode delete(K key, Node<K, V> parent, Comparator ctr, Rotate side) {
         if (this.isNotEmpty()) {
-            int result = compare(key);
-
-            try {
-                Node<K, V> node = null;
-                if (result > 0) {
-                    node = right.delete(key, this, Rotate.R);
-                    if (node == null)
-                        return null;
-                    if (parent == null)
-                        return node;
-                } else if (result < 0) {
-                    node = left.delete(key, this, Rotate.L);
-                    if (node == null)
-                        return null;
-                    if (parent == null)
-                        return node;
-                } else if (result == 0) {
-                    node = replaceNode(parent);
-                    if (parent == null)// equals
-                        return node;
-                    if (side == Rotate.R)
-                        return parent.createNode(parent.getKey(), parent.getValue(), parent.left(), node);
-                    else
-                        return parent.createNode(parent.getKey(), parent.getValue(), node, parent.right());
-                }
-                if (side == Rotate.L)
-                    return parent.createNode(parent.getKey(), parent.getValue(), node, parent.right());
-                else
-                    return parent.createNode(parent.getKey(), parent.getValue(), parent.left(), node);
-            } catch (RotateParent e) {
-                Node node = e.getParent();
-                if (parent != null)
-                    return node.deleteBalance(parent);
-                return node;
+            rebuildNode rebuildNode;
+            int result = compare(key, ctr);
+            if (result > 0) {
+                rebuildNode = right.delete(key, this, ctr, Rotate.R);
+            } else if (result < 0) {
+                rebuildNode = left.delete(key, this, ctr, Rotate.L);
+            } else { //Equal
+                rebuildNode = replaceNode(parent, ctr);
             }
+            if (parent == null)
+                return rebuildNode;
+            Node<K, V> node = rebuildNode.getNode();
+            if (rebuildNode.rebuild()) {
+                return node.deleteBalance(parent, ctr);
+            }
+
+            Node<K, V> newParent;
+            if (side == Rotate.L)
+                newParent = parent.createNode(parent.getKey(), parent.getValue(), node, parent.right());
+            else
+                newParent = parent.createNode(parent.getKey(), parent.getValue(), parent.left(), node);
+
+            return new rebuildNode<>(false, newParent);
         }
-        return null; // no key
+        return null;
     }
 
-
-    public Node<K, V> deleteSubTreeMaxNode(Node<K, V> parent, Rotate side) throws RotateParent {
+    @SuppressWarnings("unchecked")
+    public rebuildNode deleteSubTreeMaxNode(Node<K, V> parent, Comparator ctr, Rotate side) {
+        rebuildNode rebuildNode;
         Node<K, V> node;
-        try {
-            if (right().isNotEmpty()) {//最大値のノードが取得できるまで潜る
-                node = right().deleteSubTreeMaxNode(this, Rotate.R);
-            } else {
-                node = this.replaceNode(parent);
-            }
-        } catch (RotateParent e) {
-            node = e.getParent();
-            if (parent == null)
-                throw e;
-            return node.deleteBalance(parent);
+        if (right().isNotEmpty()) {//最大値のノードが取得できるまで潜る
+            rebuildNode = right().deleteSubTreeMaxNode(this, ctr, Rotate.R);
+        } else {
+            rebuildNode = this.replaceNode(parent, ctr);
         }
         if (parent == null)
-            return node;
-        if (side == Rotate.R)
-            return parent.createNode(parent.getKey(), parent.getValue(), parent.left(), node);
-        else
-            return parent.createNode(parent.getKey(), parent.getValue(), node, parent.right());
+            return rebuildNode;
 
+        if (rebuildNode.rebuild()) {
+            node = rebuildNode.getNode();
+            return node.deleteBalance(parent, ctr);
+        }
+        if (side == Rotate.R)
+            node = parent.createNode(parent.getKey(), parent.getValue(), parent.left(), rebuildNode.getNode());
+        else
+            node = parent.createNode(parent.getKey(), parent.getValue(), rebuildNode.getNode(), parent.right());
+        return new rebuildNode<>(false, node);
     }
 
-    public Node deleteBalance(Node<K, V> parent) throws RotateParent {
+    public rebuildNode<K, V> deleteBalance(Node<K, V> parent, Comparator ctr) {
+        Node<K, V> newNode;
         if (!isRed()) {
-            if (0 > compare((Comparable<? super K>) parent.getKey())) { //自身がどちらの子かを調べる
+            if (0 > compare(parent.getKey(), ctr)) { //自身がどちらの子かを調べる
                 boolean rightChild = parent.left().right().isRed();
                 boolean leftChild = parent.left().left().isRed();
 
                 if (!parent.isRed()) { //親が黒
                     if (!parent.left().isRed()) { //左の子が黒
-                        if (!rightChild && !leftChild)
-                            throw new RotateParent(rebuildThree(parent, Rotate.R));
-                        if (rightChild)
-                            return rebuildfive(parent, Rotate.R);
-                        else if (leftChild)
-                            return rebuildsix(parent, Rotate.R);
+                        if (!rightChild && !leftChild) {
+                            newNode = rebuildThree(parent, Rotate.R);
+                            return new rebuildNode<>(true, newNode);
+                        }
+                        if (rightChild) {
+                            newNode = rebuildfive(parent, Rotate.R);
+                            return new rebuildNode<>(false, newNode);
+                        } else {
+                            newNode = rebuildsix(parent, Rotate.R);
+                            return new rebuildNode<>(false, newNode);
+                        }
                     } else { //左の子が赤
-                        return rebuildTwo(parent, Rotate.R);
+                        newNode = rebuildTwo(parent, ctr, Rotate.R);
+                        return new rebuildNode<>(false, newNode);
                     }
                 } else { //親が赤
-                    if (!rightChild && !leftChild)
-                        return rebuildFour(parent, Rotate.R);
-                    if (rightChild)
-                        return rebuildfive(parent, Rotate.R);
-                    else if (leftChild)
-                        return rebuildsix(parent, Rotate.R);
+                    if (!rightChild && !leftChild) {
+                        newNode = rebuildFour(parent, Rotate.R);
+                        return new rebuildNode<>(false, newNode);
+                    }
+                    if (rightChild) {
+                        newNode = rebuildfive(parent, Rotate.R);
+                        return new rebuildNode<>(false, newNode);
+                    } else {
+                        newNode = rebuildsix(parent, Rotate.R);
+                        return new rebuildNode<>(false, newNode);
+                    }
                 }
             } else {
                 boolean rightChild = parent.right().right().isRed();
@@ -178,98 +175,114 @@ public abstract class Node<K, V>  {
 
                 if (!parent.isRed()) { //親が黒
                     if (!parent.right().isRed()) { //左の子が黒
-                        if (!rightChild && !leftChild)
-                            throw new RotateParent(rebuildThree(parent, Rotate.L));
-                        if (rightChild)
-                            return rebuildsix(parent, Rotate.L);
-                        else if (leftChild)
-                            return rebuildfive(parent, Rotate.L);
+                        if (!rightChild && !leftChild) {
+                            newNode = rebuildThree(parent, Rotate.L);
+                            return new rebuildNode<>(true, newNode);
+                        }
+                        if (rightChild) {
+                            newNode = rebuildsix(parent, Rotate.L);
+                            return new rebuildNode<>(false, newNode);
+                        } else {
+                            newNode = rebuildfive(parent, Rotate.L);
+                            return new rebuildNode<>(false, newNode);
+                        }
                     } else { //左の子が赤
-                        return rebuildTwo(parent, Rotate.L);
+                        newNode = rebuildTwo(parent, ctr, Rotate.L);
+                        return new rebuildNode<>(false, newNode);
                     }
                 } else { //親が赤
-                    if (!rightChild && !leftChild)
-                        return rebuildFour(parent, Rotate.L);
-                    if (rightChild)
-                        return rebuildsix(parent, Rotate.L);
-                    else if (leftChild)
-                        return rebuildfive(parent, Rotate.L);
+                    if (!rightChild && !leftChild) {
+                        newNode = rebuildFour(parent, Rotate.L);
+                        return new rebuildNode<>(false, newNode);
+                    }
+                    if (rightChild) {
+                        newNode = rebuildsix(parent, Rotate.L);
+                        return new rebuildNode<>(false, newNode);
+                    } else {
+                        newNode = rebuildfive(parent, Rotate.L);
+                        return new rebuildNode<>(false, newNode);
+                    }
                 }
             }
         }
-        if (0 > (compare((Comparable<? super K>) parent.getKey())))
-            return parent.createNode(parent.getKey(), parent.getValue(), parent.left(), this);
-        else
-            return parent.createNode(parent.getKey(), parent.getValue(), this, parent.right());
-    }
-
-    protected Node<K, V> rebuildTwo(Node<K, V> parent, Rotate side) throws RotateParent { // case2
-        if (side == Rotate.L) { // rotate Left
-            Node<K, V> node = parent.right();
-            Node<K, V> leftSubTreeRoot = node.createNode(parent.getKey(), parent.getValue(), this, node.left()); // check
-            Node<K, V> leftNode = this.deleteBalance(leftSubTreeRoot);
-            Node<K, V> rightNode = node.right();
-            return parent.createNode(node.getKey(), node.getValue(), leftNode, rightNode);
-        } else {  // rotate Right
-            Node<K, V> node = parent.left();
-            Node<K, V> rightSubTreeRoot = node.createNode(parent.getKey(), parent.getValue(), node.right(), this);
-            Node<K, V> rightNode = this.deleteBalance(rightSubTreeRoot);
-            Node<K, V> leftNode = node.left();
-            return parent.createNode(node.getKey(), node.getValue(), leftNode, rightNode);
+        if (0 > (compare(parent.getKey(), ctr))) {
+            newNode = parent.createNode(parent.getKey(), parent.getValue(), parent.left(), this);
+            return new rebuildNode<>(false, newNode);
+        } else {
+            newNode = parent.createNode(parent.getKey(), parent.getValue(), this, parent.right());
+            return new rebuildNode<>(false, newNode);
         }
     }
 
-    protected Node rebuildThree(Node<K, V> parent, Rotate side) { // case3 再帰
+    protected Node<K, V> rebuildTwo(Node<K, V> parent, Comparator ctr, Rotate side) { // case2
+        if (side == Rotate.L) { // rotate Left
+            Node<K, V> node = parent.right();
+            Node<K, V> leftSubTreeRoot = node.createNode(parent.getKey(), parent.getValue(), this, node.left()); // check
+            rebuildNode<K, V> rebuildNode = new rebuildNode<>(false, leftSubTreeRoot);
+            rebuildNode<K, V> leftNodeRebuildNode = this.deleteBalance(rebuildNode.getNode(), ctr);
+            Node<K, V> rightNode = node.right();
+            return parent.createNode(node.getKey(), node.getValue(), leftNodeRebuildNode.getNode(), rightNode);
+        } else {  // rotate Right
+            Node<K, V> node = parent.left();
+            Node<K, V> rightSubTreeRoot = node.createNode(parent.getKey(), parent.getValue(), node.right(), this);
+            rebuildNode<K, V> rightSubTreeRebuildNode = new rebuildNode<>(false, rightSubTreeRoot);
+            rebuildNode<K, V> rightNodeRebuildNode = this.deleteBalance(rightSubTreeRebuildNode.getNode(), ctr);
+            Node<K, V> leftNode = node.left();
+            return parent.createNode(node.getKey(), node.getValue(), leftNode, rightNodeRebuildNode.getNode());
+        }
+    }
+
+    protected Node<K, V> rebuildThree(Node<K, V> parent, Rotate side) { // case3 再帰
         if (side == Rotate.L) {
             Node<K, V> rightNode;
             if (parent.right().isNotEmpty())
-                rightNode = new RedNode<K, V>(parent.right().getKey(), parent.right().getValue(), parent.right().left(), parent.right().right()); // check
+                rightNode = new RedNode<>(parent.right().getKey(), parent.right().getValue(), parent.right().left(), parent.right().right()); // check
             else
                 rightNode = new EmptyNode<>();
             return parent.createNode(parent.getKey(), parent.getValue(), this, rightNode);
         } else {
             Node<K, V> leftNode;
             if (parent.left().isNotEmpty())
-                leftNode = new RedNode<K, V>(parent.left().getKey(), parent.left().getValue(), parent.left().left(), parent.left().right()); // check
+                leftNode = new RedNode<>(parent.left().getKey(), parent.left().getValue(), parent.left().left(), parent.left().right()); // check
             else
                 leftNode = new EmptyNode<>();
             return parent.createNode(parent.getKey(), parent.getValue(), leftNode, this);
         }
     }
 
-    protected Node rebuildFour(Node<K, V> parent, Rotate side) { //case 4
+    protected Node<K, V> rebuildFour(Node<K, V> parent, Rotate side) { //case 4
         if (side == Rotate.R) {
-            Node<K, V> leftNode = new RedNode<K, V>(parent.left().getKey(), parent.left().getValue(), parent.left().left(), parent.left().right());
-            return new BlackNode<K, V>(parent.getKey(), parent.getValue(), leftNode, this);
+            Node<K, V> leftNode = new RedNode<>(parent.left().getKey(), parent.left().getValue(), parent.left().left(), parent.left().right());
+            return new BlackNode<>(parent.getKey(), parent.getValue(), leftNode, this);
         } else {
-            Node<K, V> rightNode = new RedNode<K, V>(parent.right().getKey(), parent.right().getValue(), parent.right().left(), parent.right().right());
-            return new BlackNode<K, V>(parent.getKey(), parent.getValue(), this, rightNode);
+            Node<K, V> rightNode = new RedNode<>(parent.right().getKey(), parent.right().getValue(), parent.right().left(), parent.right().right());
+            return new BlackNode<>(parent.getKey(), parent.getValue(), this, rightNode);
         }
     }
 
-    protected Node rebuildfive(Node<K, V> parent, Rotate side) { //case5
+    protected Node<K, V> rebuildfive(Node<K, V> parent, Rotate side) { //case5
         if (side == Rotate.R) { // rotate Left
-            Node<K, V> leftChild = new RedNode<K, V>(parent.left().getKey(), parent.left().getValue(), parent.left().left(), parent.left().right().left());
+            Node<K, V> leftChild = new RedNode<>(parent.left().getKey(), parent.left().getValue(), parent.left().left(), parent.left().right().left());
             Node<K, V> rightChild = parent.left().right().right();
-            Node<K, V> leftSubTreeRoot = new BlackNode<K, V>(parent.left().right().getKey(), parent.left().right().getValue(), leftChild, rightChild);
+            Node<K, V> leftSubTreeRoot = new BlackNode<>(parent.left().right().getKey(), parent.left().right().getValue(), leftChild, rightChild);
             Node<K, V> newParent = parent.createNode(parent.getKey(), parent.getValue(), leftSubTreeRoot, this);
             return this.rebuildsix(newParent, Rotate.R);
         } else {  // rotate Right 修正済み
             Node<K, V> leftChild = parent.right().left().left();
-            Node<K, V> rightChild = new RedNode<K, V>(parent.right().getKey(), parent.right().getValue(), parent.right().left().right(), parent.right().right());
-            Node<K, V> rightSubTreeRoot = new BlackNode<K, V>(parent.right().left().getKey(), parent.right().left().getValue(), leftChild, rightChild);
+            Node<K, V> rightChild = new RedNode<>(parent.right().getKey(), parent.right().getValue(), parent.right().left().right(), parent.right().right());
+            Node<K, V> rightSubTreeRoot = new BlackNode<>(parent.right().left().getKey(), parent.right().left().getValue(), leftChild, rightChild);
             Node<K, V> newParent = parent.createNode(parent.getKey(), parent.getValue(), this, rightSubTreeRoot);
             return this.rebuildsix(newParent, Rotate.L);
         }
     }
 
-    protected Node rebuildsix(Node<K, V> parent, Rotate side) { //case6
+    protected Node<K, V> rebuildsix(Node<K, V> parent, Rotate side) { //case6
         if (side == Rotate.L) { // rotate Left
             Node<K, V> leftChild = parent.right().createNode(parent.getKey(), parent.getValue(), this, parent.right().left()); //check
-            Node<K, V> rightChild = new BlackNode<K, V>(parent.right().right().getKey(), parent.right().right().getValue(), parent.right().right().left(), parent.right().right().right());
+            Node<K, V> rightChild = new BlackNode<>(parent.right().right().getKey(), parent.right().right().getValue(), parent.right().right().left(), parent.right().right().right());
             return parent.createNode(parent.right().getKey(), parent.right().getValue(), leftChild, rightChild);
         } else {  // rotate Right
-            Node<K, V> leftChild = new BlackNode<K, V>(parent.left().left().getKey(), parent.left().left().getValue(), parent.left().left().left(), parent.left().left().right());
+            Node<K, V> leftChild = new BlackNode<>(parent.left().left().getKey(), parent.left().left().getValue(), parent.left().left().left(), parent.left().left().right());
             Node<K, V> rightChild = parent.left().createNode(parent.getKey(), parent.getValue(), parent.left().right(), this);
             return parent.createNode(parent.left().getKey(), parent.left().getValue(), leftChild, rightChild);
         }
@@ -286,10 +299,11 @@ public abstract class Node<K, V>  {
 
     abstract boolean isRed();
 
-    public abstract Node replaceNode(Node<K, V> parent) throws RotateParent;
+    public abstract rebuildNode replaceNode(Node<K, V> parent, Comparator ctr);
 
-    protected abstract Node deleteNode() throws RotateParent;
+    protected abstract rebuildNode deleteNode();
 
     @Test
-    protected abstract int checkDepth (int count , int minCount); // test method
+    // test method
+    protected abstract int checkDepth(int count, int minCount);
 }

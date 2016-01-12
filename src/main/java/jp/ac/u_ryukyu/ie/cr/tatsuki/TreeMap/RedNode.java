@@ -2,11 +2,9 @@ package jp.ac.u_ryukyu.ie.cr.tatsuki.TreeMap;
 
 import org.junit.Test;
 
-import static jp.ac.u_ryukyu.ie.cr.tatsuki.TreeMap.Rotate.*;
+import java.util.Comparator;
 
-/**
- * Created by e115731 on 15/03/25.
- */
+
 public class RedNode<K, V> extends Node<K, V> {
 
 
@@ -22,7 +20,7 @@ public class RedNode<K, V> extends Node<K, V> {
 
     @Override
     public Node<K, V> createNode(K key, V value, Node<K, V> left, Node<K, V> right) {
-        return new RedNode<K, V>(key, value, left, right);
+        return new RedNode<>(key, value, left, right);
     }
 
     @Override
@@ -31,25 +29,25 @@ public class RedNode<K, V> extends Node<K, V> {
     }
 
     @Override
-    protected Node deleteNode() throws RotateParent{
-        EmptyNode emptyNode = new EmptyNode(this.getKey());
-        return emptyNode;
+    protected rebuildNode deleteNode() {
+        Node<K,V> emptyNode = new EmptyNode<>(this.getKey());
+        return new rebuildNode<>(false, emptyNode);
     }
 
     @Override
     Rotate checkRotate(Rotate side) {
-        if (side == L) {
+        if (side == Rotate.L) {
             if (left.isRed())
-                return R;
+                return Rotate.R;
             else if (right.isRed())
-                return LR;
-            return N;
+                return Rotate.LR;
+            return Rotate.N;
         } else {
             if (left.isRed())
-                return RL;
+                return Rotate.RL;
             else if (right.isRed())
-                return L;
-            return N;
+                return Rotate.L;
+            return Rotate.N;
         }
     }
 
@@ -58,17 +56,18 @@ public class RedNode<K, V> extends Node<K, V> {
         return true;
     }
 
+    @SuppressWarnings("unchecked")
     @Override
-    public Node replaceNode(Node<K, V> parent) throws RotateParent {
-        Node<K, V> newNode = null;
+    public rebuildNode replaceNode(Node<K, V> parent, Comparator ctr) {
+        Node<K, V> newNode;
         if (!this.left().isNotEmpty() && !this.right().isNotEmpty()) { //自身を削除する
             return deleteNode();
         } else if (this.left().isNotEmpty() && !this.right().isNotEmpty()) { //左の部分木を昇格させる
             newNode = left().createNode(left().getKey(), left().getValue(), left().left(), left().right());
-            return newNode;
+            return new rebuildNode(false, newNode);
         } else if (!this.left().isNotEmpty() && this.right().isNotEmpty()) { //右の部分木を昇格させる
             newNode = right().createNode(right().getKey(), right().getValue(), right().left(), right().right());
-            return newNode;
+            return new rebuildNode(false, newNode);
         } else {//子ノードが左右にある場合
             //左の部分木の最大の値を持つNodeと自身を置き換える
             Node<K, V> cur = this.left();
@@ -76,27 +75,26 @@ public class RedNode<K, V> extends Node<K, V> {
             while (cur.right().isNotEmpty()) {
                 cur = cur.right();
             }
-            Node leftSubTreeNode = null;
             if (this.left().right().isNotEmpty()) {
-                try {
-                    leftSubTreeNode = this.left().deleteSubTreeMaxNode(null,Rotate.L);
-                    newNode = createNode(cur.getKey(), cur.getValue(), leftSubTreeNode, this.right());
-                    return newNode;
-                } catch (RotateParent e) {
-                    leftSubTreeNode = e.getParent();
-                    Node<K, V> newParent = createNode(cur.getKey(), cur.getValue(), leftSubTreeNode, this.right());
-                    return leftSubTreeNode.deleteBalance(newParent);
+                rebuildNode<K, V> leftSubTreeNodeRebuildNode = this.left().deleteSubTreeMaxNode(null, ctr, Rotate.L);
+                if (leftSubTreeNodeRebuildNode.rebuild()) {
+                    Node<K, V> node = leftSubTreeNodeRebuildNode.getNode();
+                    Node<K, V> newParent = createNode(cur.getKey(), cur.getValue(), node, this.right());
+                    return node.deleteBalance(newParent, ctr);
                 }
+                Node<K, V> leftSubTreeNode = leftSubTreeNodeRebuildNode.getNode();
+                newNode = createNode(cur.getKey(), cur.getValue(), leftSubTreeNode, this.right());
+                return new rebuildNode<>(false, newNode);
             } else {
-                try {
-                    leftSubTreeNode = this.left().replaceNode(this);
-                    newNode = createNode(cur.getKey(), cur.getValue(), leftSubTreeNode, this.right());
-                    return newNode;
-                } catch (RotateParent e) {
-                    Node node = e.getParent();
-                    Node newParent = createNode(this.left().getKey(), this.left().getValue(), leftSubTreeNode, this.right());
-                    return node.deleteBalance(newParent);
+                rebuildNode<K, V> leftSubTreeNodeRebuildNode = this.left().replaceNode(this, ctr);
+                if (leftSubTreeNodeRebuildNode.rebuild()) {
+                    Node<K, V> node = leftSubTreeNodeRebuildNode.getNode();
+                    Node<K, V> newParent = createNode(this.left().getKey(), this.left().getValue(), node, this.right());
+                    return node.deleteBalance(newParent, ctr);
                 }
+                Node<K, V> leftSubTreeNode = leftSubTreeNodeRebuildNode.getNode();
+                newNode = createNode(cur.getKey(), cur.getValue(), leftSubTreeNode, this.right());
+                return new rebuildNode<>(false, newNode);
             }
 
         }
@@ -105,11 +103,10 @@ public class RedNode<K, V> extends Node<K, V> {
 
     @Override
     @Test
-    protected int checkDepth(int count,int minCount) { // test method
-        count ++;
+    protected int checkDepth(int count, int minCount) { // test method
+        count++;
         minCount = left().checkDepth(count, minCount);
         minCount = right().checkDepth(count, minCount);
-        count --;
         return minCount;
     }
 }

@@ -1,21 +1,17 @@
 package jp.ac.u_ryukyu.ie.cr.tatsuki.test;
 
+
 import jp.ac.u_ryukyu.ie.cr.tatsuki.TreeMap.TreeMap;
+import org.junit.Test;
 
 import java.util.Optional;
 
-/**
- * Created by e115731 on 15/03/24.
- */
-public class TreeMapTest {
-    public static void main(String args[]) {
-        TreeMap<Integer, Integer> map = new TreeMap();
-        TreeMap<Integer, Integer> map1 = map.put(0,0);
-        TreeMap<Integer, Integer> map2 = map1.put(1,1);
-        TreeMap<Integer, Integer> map3 = map2.put(2,2);
-        TreeMap<Integer, Integer> map4 = map3.put(3,3);
-        TreeMap<Integer, Integer> map5 = map4.put(4,4);
-        for (int count = 100; count > 0; count--) {
+public class TreeMapPut {
+
+    @Test
+    public void TreeMapPutTest() {
+        TreeMap<Integer, Integer> map = new TreeMap<>();
+        for (int count = 100; count > -10; count--) {
             map = map.put(count, count);
             map.checkDepth();
             System.out.println("-------------------------------------------");
